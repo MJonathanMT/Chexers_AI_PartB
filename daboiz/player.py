@@ -54,6 +54,18 @@ def initiate_board():
     return board_dict
 
 
+def find_eaten(before_jump, after_jump):
+    """
+    This function finds the coordinates of the piece that was 'eaten'
+    :return: The coordinate of the 'eaten' piece
+    """
+    eaten = ()
+    eaten[0] = (after_jump[0] - before_jump[0])/2
+    eaten[1] = (after_jump[1] - before_jump[1])/2
+
+    return eaten
+
+
 class Player:
     def __init__(self, colour):
         """
@@ -70,8 +82,9 @@ class Player:
 
         # Set up starting coordinates of pieces, and goals for our pieces
         self.colour = colour
-        self.start = get_start(colour)
+        self.pieces = get_start(colour)
         self.goals = get_finish(colour)
+        self.pieces_exited = 0
 
         # Set up our representation of the game_board
         self.board_dict = initiate_board()
@@ -109,3 +122,36 @@ class Player:
         the action/pass against the game rules).
         """
         # TODO: Update state representation in response to action.
+
+        if action[0] == "MOVE":
+            self.board_dict[action[1][0]] = ""
+            self.board_dict[action[1][1]] = colour
+            if (colour == self.colour):
+                self.pieces.remove(action[1][0])
+                self.pieces.add(action[1][1])
+
+        elif action[0] == "JUMP":
+            # TODO
+            self.board_dict[action[1][0]] = ""
+            self.board_dict[action[1][1]] = colour
+            if (colour == self.colour):
+                self.pieces.remove(action[1][0])
+                self.pieces.add(action[1][1])
+
+            # Changing the piece that was 'eaten'(jumped over) to the colour of the piece making the jump
+            eaten = find_eaten(action[1][0], action[1][1])
+            prev_colour = board_dict[eaten]
+
+            # If the 'eaten' piece is not the same colour as the piece making the jump, it officially gets eaten
+            if colour != prev_colour:
+                board_dict[eaten] = colour
+                if self.colour == colour:
+                    self.pieces.add(eaten)
+                elif self.colour == prev_colour:
+                    self.pieces.remove(eaten)
+
+        elif action[0] == "EXIT":
+            # TODO
+            self.board_dict[action[1]] = ""
+            if (self.colour == colour):
+                self.pieces_exited += 1
