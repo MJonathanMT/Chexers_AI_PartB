@@ -419,7 +419,7 @@ class Player:
         # TODO: Update state representation in response to action.
 
         if action[0] == "MOVE":
-            self.board_dict[action[1][0]] = ""
+            del self.board_dict[action[1][0]]
             self.board_dict[action[1][1]] = colour
             if colour == self.colour:
                 self.pieces.remove(action[1][0])
@@ -427,7 +427,8 @@ class Player:
 
         elif action[0] == "JUMP":
             # TODO
-            self.board_dict[action[1][0]] = ""
+
+            del self.board_dict[action[1][0]]
             self.board_dict[action[1][1]] = colour
             if colour == self.colour:
                 self.pieces.remove(action[1][0])
@@ -449,6 +450,7 @@ class Player:
 
         elif action[0] == "EXIT":
             # TODO
-            self.board_dict[action[1]] = ""
+            del self.board_dict[action[1]]
             if self.colour == colour:
+                self.pieces.remove(action[1])
                 self.pieces_exited += 1
