@@ -5,7 +5,6 @@ def get_finish(colour):
     :param colour: The colour of the player's pieces
     :return: A set of all the available goals
     """
-    finish = {}
     if colour == 'red':
         finish = {(3, -3), (3, -2), (3, -1), (3, 0)}
     elif colour == 'blue':
@@ -24,7 +23,6 @@ def get_start(colour):
     :param colour: The colour of the player's pieces
     :return: A set of the starting coordinates
     """
-    start = {}
     if colour == 'red':
         start = {(-3, 3), (-3, 2), (-3, 1), (-3, 0)}
     elif colour == 'blue':
@@ -61,52 +59,11 @@ def find_eaten(before_jump, after_jump):
     This function finds the coordinates of the piece that was 'eaten'
     :return: The coordinate of the 'eaten' piece
     """
-    q_move = (after_jump[0] - before_jump[0])/2
-    r_move = (after_jump[1] - before_jump[1])/2
+    eaten = ()
+    eaten[0] = (after_jump[0] - before_jump[0])/2
+    eaten[1] = (after_jump[1] - before_jump[1])/2
 
-    eaten = (before_jump + q_move, before_jump + r_move)
     return eaten
-
-
-def get_adjacent(pos, adj_dict):
-    """
-    This function returns all the adjacent hexes of each hex within the board
-    :param pos: Position/coordinate of the current hex
-    :param adj_dict: Dictionary with each hex being the key and all the adjacent
-     hexes of the hex as the value
-    :return: adj_dict: Complete dictionary of the adjacent hexes of all hex
-     within the board
-    """
-    # If the current position is already a key in adj_dict, exit the recursion
-    if pos in adj_dict:
-        return adj_dict
-
-    all_moves = [(0, -1), (1, -1), (1, 0), (0, 1), (-1, 1), (-1, 0)]
-    pos_val = []
-    # Iterate through all moves to check if its within the board
-    for move in all_moves:
-        q = pos[0] + move[0]
-        r = pos[1] + move[1]
-        # If it is not within the board range, skip this move (continue)
-        if not (abs(q) <= 3 and abs(r) <= 3 and abs(q+r) <= 3):
-            continue
-
-        # next_pos is the current position + the move
-        next_pos = (q, r)
-
-        # add the next position to the value of the current position
-        pos_val.append(next_pos)
-
-    # pass the list of all possible moves to the dictionary with the key as the
-    # current position
-    adj_dict[pos] = pos_val
-
-    # Recurse through each adjacent hex of the current hex
-    for val in pos_val:
-        get_adjacent(val, adj_dict)
-
-    # returns final dictionary of all adjacent hexes
-    return adj_dict
 
 
 def get_goals(colour):
@@ -128,8 +85,18 @@ def get_goals(colour):
     return end_points
 
 
-def distance_fill(self, dist_dict, pos, dist):
-
+def distance_fill(dist_dict, adj_dict, pos, dist, blockers):
+    """
+    This function creates a dictionary which has values of the shortest
+     distance to the nearest goal
+    :param dist_dict: Dictionary containing the distance to the nearest goal
+    :param adj_dict: Dictionary of all adjacent hexes
+    :param pos: Current position on the board
+    :param dist: Current distance from the goal
+    :param blockers: A list of blocked hexes
+    :return: A complete dictionary with coordinates/positions as key
+     and the distance to the nearest goal as the value
+    """
     dist += 1
     # These '###' represents an unvisited hex
     if dist_dict[pos] == '###':
@@ -143,12 +110,12 @@ def distance_fill(self, dist_dict, pos, dist):
         dist_dict[pos] = dist
 
     next_jump = ()
-    for next_pos in self.adj_dict[pos]:
+    for next_pos in adj_dict[pos]:
         movable = True
         jumpable = True
 
         # Set movable to False if it is blocked
-        if next_pos in self.board_dict:
+        if next_pos in blockers:
             movable = False
 
         # Check if can jump over the blocked piece, only happens when
@@ -157,29 +124,28 @@ def distance_fill(self, dist_dict, pos, dist):
             q_move = (next_pos[0] - pos[0])*2
             r_move = (next_pos[1] - pos[1])*2
             next_jump = (pos[0] + q_move, pos[1] + r_move)
-            if (next_jump not in self.adj_dict[next_pos] or
-                    next_jump in self.board_dict):
+            if next_jump not in adj_dict[next_pos] or next_jump in blockers:
                 jumpable = False
 
         # Recurse through the appropriate movement: move or jump
         if movable:
-            distance_fill(self, dist_dict, next_pos, dist)
+            distance_fill(dist_dict, adj_dict, next_pos, dist, blockers)
         elif jumpable:
-            distance_fill(self, dist_dict, next_jump, dist)
+            distance_fill(dist_dict, adj_dict, next_jump, dist, blockers)
 
     return dist_dict
 
 
-def get_moves(self, dist_dict):
+def get_moves(self, board_dict, dist_dict, adj_dict):
     best_moves = {}
     for piece in self.pieces:
         movement = []
         shortest_dist = 0
         best_move = ()
-        for next_move in self.adj_dict[piece]:
+        for next_move in adj_dict[piece]:
             # Skips move if there is another piece in front of it or
             # if there is a blocked hex
-            if next_move in self.board_dict:
+            if next_move in board_dict:
                 continue
 
             # the best move is where the distance of the next
@@ -205,24 +171,23 @@ def get_moves(self, dist_dict):
     return best_moves
 
 
-def get_jumps(self, dist_dict):
+def get_jumps(self, board_dict, dist_dict, adj_dict):
     best_jumps = {}
     for piece in self.pieces:
         shortest_dist = 0
         jumping = []
         best_jump = ()
-        for next_move in self.adj_dict[piece]:
+        for next_move in adj_dict[piece]:
             # Skips if the next move is an empty hex,
             # this means its not jumpable
-            if next_move not in self.board_dict:
+            if next_move not in board_dict:
                 continue
             q_move = (next_move[0] - piece[0])*2
             r_move = (next_move[1] - piece[1])*2
             next_jump = (piece[0] + q_move, piece[1] + r_move)
             # Skips the next jump if the next jump location is
             # another piece, a block or it isn't within the board
-            if (next_jump not in self.adj_dict[next_move] or
-                    next_jump in self.board_dict):
+            if next_jump not in adj_dict[next_move] or next_jump in board_dict:
                 continue
 
             # the best jump is where the distance of the next
@@ -316,27 +281,16 @@ def get_piece(dist_dict, final_moves):
     return final_move
 
 
-def create_dist_dict():
-    """
-    This function creates an unvisited distance dictionary filled with '###'
-    :return: Returns unvisited distance dictionary
-    """
-    dist_dict = {}
-    ran = range(-3, +3 + 1)
-    for qr in [(q, r) for q in ran for r in ran if -q - r in ran]:
-        dist_dict[qr] = '###'
-    return dist_dict
-
 
 class Player:
     def __init__(self, colour):
         """
         This method is called once at the beginning of the game to initialise
         your player. You should use this opportunity to set up your own internal
-        representation of the game state, and any other information about the 
+        representation of the game state, and any other information about the
         game state you would like to maintain for the duration of the game.
-        The parameter colour will be a string representing the player your 
-        program will play as (Red, Green or Blue). The value will be one of the 
+        The parameter colour will be a string representing the player your
+        program will play as (Red, Green or Blue). The value will be one of the
         strings "red", "green", or "blue" correspondingly.
         """
         # TODO: Set up state representation.
@@ -350,70 +304,60 @@ class Player:
         # Set up our representation of the game_board
         self.board_dict = initiate_board()
 
-        # Get all available adjacent hexes within the board range
-        empty_dict = {}
-        self.adj_dict = get_adjacent((0, 0), empty_dict)
-
-        # Create an unvisited distance dictionary
-        self.dist_dict = create_dist_dict()
-
     def action(self):
         """
-        This method is called at the beginning of each of your turns to request 
+        This method is called at the beginning of each of your turns to request
         a choice of action from your program.
 
-        Based on the current state of the game, your player should select and 
-        return an allowed action to play on this turn. If there are no allowed 
-        actions, your player must return a pass instead. The action (or pass) 
-        must be represented based on the above instructions for representing 
+        Based on the current state of the game, your player should select and
+        return an allowed action to play on this turn. If there are no allowed
+        actions, your player must return a pass instead. The action (or pass)
+        must be represented based on the above instructions for representing
         actions.
         """
-        # Fill distance dictionary with the least distance from each goal
-        dist_dict = self.dist_dict
-        for goal in self.goals:
-            distance = 0
-            dist_dict = distance_fill(self, dist_dict, goal, distance)
-
         # TODO: Decide what action to take.
+        exit_move = False
         action = ("PASS", None)
         for piece in self.pieces:
             if piece in self.goals:
                 action = ("EXIT", piece)
                 self.pieces.remove(piece)
+                exit_move = True
                 return action
 
-        # Get the best move possible for each piece
-        best_moves = get_moves(self, dist_dict)
+        if not exit_move:
+            # Get the best move possible for each piece
+            best_moves = get_moves(self, board_dict, dist_dict, adj_dict)
 
-        # Get the best jump possible for each piece
-        best_jumps = get_jumps(self, dist_dict)
+            # Get the best jump possible for each piece
+            best_jumps = get_jumps(dist_dict, adj_dict, blockers, pieces)
 
-        # Get the best action possible for each piece
-        final_moves = final_movements(dist_dict, best_moves, best_jumps)
+            # Get the best action possible for each piece
+            final_moves = final_movements(dist_dict, best_moves, best_jumps)
 
-        # Choose the best piece to move
-        final_move = get_piece(dist_dict, final_moves)
-        if final_move == ():
-            return action
-        elif final_move[2] == 'move':
-            action = ("MOVE", (str(final_move[0]), str(final_move[1])))
-        elif final_move[2] == 'jump':
-            action = ("JUMP", (str(final_move[0]), str(final_move[1])))
+            # Choose the best piece to move
+            final_move = get_piece(dist_dict, final_moves)
+            if final_move == ():
+                return action
+            if final_move[2] == 'move':
+                action = ("MOVE", (str(final_move[0]), str(final_move[1])))
+            elif final_move[2] == 'jump':
+                action = ("JUMP", (str(final_move[0]), str(final_move[1])))
         return action
 
     def update(self, colour, action):
         """
-        This method is called at the end of every turn (including your player’s 
-        turns) to inform your player about the most recent action. You should 
-        use this opportunity to maintain your internal representation of the 
+        This method is called at the end of every turn (including your player’s
+        turns) to inform your player about the most recent action. You should
+        use this opportunity to maintain your internal representation of the
         game state and any other information about the game you are storing.
         The parameter colour will be a string representing the player whose turn
-        it is (Red, Green or Blue). The value will be one of the strings "red", 
+        it is (Red, Green or Blue). The value will be one of the strings "red",
         "green", or "blue" correspondingly.
-        The parameter action is a representation of the most recent action (or 
+        The parameter action is a representation of the most recent action (or
         pass) conforming to the above in- structions for representing actions.
-        You may assume that action will always correspond to an allowed action 
-        (or pass) for the player colour (your method does not need to validate 
+        You may assume that action will always correspond to an allowed action
+        (or pass) for the player colour (your method does not need to validate
         the action/pass against the game rules).
         """
         # TODO: Update state representation in response to action.
@@ -421,7 +365,7 @@ class Player:
         if action[0] == "MOVE":
             self.board_dict[action[1][0]] = ""
             self.board_dict[action[1][1]] = colour
-            if colour == self.colour:
+            if (colour == self.colour):
                 self.pieces.remove(action[1][0])
                 self.pieces.add(action[1][1])
 
@@ -429,19 +373,17 @@ class Player:
             # TODO
             self.board_dict[action[1][0]] = ""
             self.board_dict[action[1][1]] = colour
-            if colour == self.colour:
+            if (colour == self.colour):
                 self.pieces.remove(action[1][0])
                 self.pieces.add(action[1][1])
 
-            # Changing the piece that was 'eaten'(jumped over) to the
-            # colour of the piece making the jump
+            # Changing the piece that was 'eaten'(jumped over) to the colour of the piece making the jump
             eaten = find_eaten(action[1][0], action[1][1])
-            prev_colour = self.board_dict[eaten]
+            prev_colour = board_dict[eaten]
 
-            # If the 'eaten' piece is not the same colour as the
-            # piece making the jump, it officially gets eaten
+            # If the 'eaten' piece is not the same colour as the piece making the jump, it officially gets eaten
             if colour != prev_colour:
-                self.board_dict[eaten] = colour
+                board_dict[eaten] = colour
                 if self.colour == colour:
                     self.pieces.add(eaten)
                 elif self.colour == prev_colour:
@@ -450,5 +392,5 @@ class Player:
         elif action[0] == "EXIT":
             # TODO
             self.board_dict[action[1]] = ""
-            if self.colour == colour:
+            if (self.colour == colour):
                 self.pieces_exited += 1
