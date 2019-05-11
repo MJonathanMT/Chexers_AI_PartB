@@ -148,7 +148,7 @@ def distance_fill(self, dist_dict, pos, dist):
         jumpable = True
 
         # Set movable to False if it is blocked
-        if next_pos in self.board_dict:
+        if next_pos in self.board_dict and next_pos not in self.pieces:
             movable = False
 
         # Check if can jump over the blocked piece, only happens when
@@ -374,6 +374,8 @@ class Player:
             distance = 0
             dist_dict = distance_fill(self, dist_dict, goal, distance)
 
+        print_board(dist_dict)
+
         # TODO: Decide what action to take.
         action = ("PASS", None)
         for piece in self.pieces:
@@ -396,9 +398,10 @@ class Player:
         if final_move == ():
             return action
         elif final_move[2] == 'move':
-            action = ("MOVE", (str(final_move[0]), str(final_move[1])))
+            action = ("MOVE", (final_move[0], final_move[1]))
         elif final_move[2] == 'jump':
-            action = ("JUMP", (str(final_move[0]), str(final_move[1])))
+            action = ("JUMP", (final_move[0], final_move[1]))
+
         return action
 
     def update(self, colour, action):
@@ -454,3 +457,85 @@ class Player:
             if self.colour == colour:
                 self.pieces.remove(action[1])
                 self.pieces_exited += 1
+
+
+def print_board(board_dict, message="Testing Board Condition", debug=False):
+    """
+    Helper function to print a drawing of a hexagonal board's contents.
+
+    Arguments:
+
+    * `board_dict` -- dictionary with tuples for keys and anything printable
+    for values. The tuple keys are interpreted as hexagonal coordinates (using 
+    the axial coordinate system outlined in the project specification) and the 
+    values are formatted as strings and placed in the drawing at the corres- 
+    ponding location (only the first 5 characters of each string are used, to 
+    keep the drawings small). Coordinates with missing values are left blank.
+
+    Keyword arguments:
+
+    * `message` -- an optional message to include on the first line of the 
+    drawing (above the board) -- default `""` (resulting in a blank message).
+    * `debug` -- for a larger board drawing that includes the coordinates 
+    inside each hex, set this to `True` -- default `False`.
+    * Or, any other keyword arguments! They will be forwarded to `print()`.
+    """
+
+    # Set up the board template:
+    if not debug:
+        # Use the normal board template (smaller, not showing coordinates)
+        template = """# {0}
+#           .-'-._.-'-._.-'-._.-'-.
+#          |{16:}|{23:}|{29:}|{34:}| 
+#        .-'-._.-'-._.-'-._.-'-._.-'-.
+#       |{10:}|{17:}|{24:}|{30:}|{35:}| 
+#     .-'-._.-'-._.-'-._.-'-._.-'-._.-'-.
+#    |{05:}|{11:}|{18:}|{25:}|{31:}|{36:}| 
+#  .-'-._.-'-._.-'-._.-'-._.-'-._.-'-._.-'-.
+# |{01:}|{06:}|{12:}|{19:}|{26:}|{32:}|{37:}| 
+# '-._.-'-._.-'-._.-'-._.-'-._.-'-._.-'-._.-'
+#    |{02:}|{07:}|{13:}|{20:}|{27:}|{33:}| 
+#    '-._.-'-._.-'-._.-'-._.-'-._.-'-._.-'
+#       |{03:}|{08:}|{14:}|{21:}|{28:}| 
+#       '-._.-'-._.-'-._.-'-._.-'-._.-'
+#          |{04:}|{09:}|{15:}|{22:}|
+#          '-._.-'-._.-'-._.-'-._.-'"""
+    else:
+        # Use the debug board template (larger, showing coordinates)
+        template = """# {0}
+#              ,-' `-._,-' `-._,-' `-._,-' `-.
+#             | {16:} | {23:} | {29:} | {34:} | 
+#             |  0,-3 |  1,-3 |  2,-3 |  3,-3 |
+#          ,-' `-._,-' `-._,-' `-._,-' `-._,-' `-.
+#         | {10:} | {17:} | {24:} | {30:} | {35:} |
+#         | -1,-2 |  0,-2 |  1,-2 |  2,-2 |  3,-2 |
+#      ,-' `-._,-' `-._,-' `-._,-' `-._,-' `-._,-' `-. 
+#     | {05:} | {11:} | {18:} | {25:} | {31:} | {36:} |
+#     | -2,-1 | -1,-1 |  0,-1 |  1,-1 |  2,-1 |  3,-1 |
+#  ,-' `-._,-' `-._,-' `-._,-' `-._,-' `-._,-' `-._,-' `-.
+# | {01:} | {06:} | {12:} | {19:} | {26:} | {32:} | {37:} |
+# | -3, 0 | -2, 0 | -1, 0 |  0, 0 |  1, 0 |  2, 0 |  3, 0 |
+#  `-._,-' `-._,-' `-._,-' `-._,-' `-._,-' `-._,-' `-._,-' 
+#     | {02:} | {07:} | {13:} | {20:} | {27:} | {33:} |
+#     | -3, 1 | -2, 1 | -1, 1 |  0, 1 |  1, 1 |  2, 1 |
+#      `-._,-' `-._,-' `-._,-' `-._,-' `-._,-' `-._,-' 
+#         | {03:} | {08:} | {14:} | {21:} | {28:} |
+#         | -3, 2 | -2, 2 | -1, 2 |  0, 2 |  1, 2 | key:
+#          `-._,-' `-._,-' `-._,-' `-._,-' `-._,-' ,-' `-.
+#             | {04:} | {09:} | {15:} | {22:} |   | input |
+#             | -3, 3 | -2, 3 | -1, 3 |  0, 3 |   |  q, r |
+#              `-._,-' `-._,-' `-._,-' `-._,-'     `-._,-'"""
+
+    # prepare the provided board contents as strings, formatted to size.
+    ran = range(-3, +3 + 1)
+    cells = []
+    for qr in [(q, r) for q in ran for r in ran if -q - r in ran]:
+        if qr in board_dict:
+            cell = str(board_dict[qr]).center(5)
+        else:
+            cell = "     "  # 5 spaces will fill a cell
+        cells.append(cell)
+
+    # fill in the template to create the board drawing, then print!
+    board = template.format(message, *cells)
+    print(board)
