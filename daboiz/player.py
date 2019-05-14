@@ -16,7 +16,6 @@ def get_finish(colour):
     # Returns the final list of end_points/goals
     return finish
 
-
 def get_start(colour):
     """
     This function returns a list of all the starting coordinates
@@ -24,17 +23,16 @@ def get_start(colour):
     :param colour: The colour of the player's pieces
     :return: A set of the starting coordinates
     """
-    start = {}
+    start = []
     if colour == 'red':
-        start = {(-3, 3), (-3, 2), (-3, 1), (-3, 0)}
-    elif colour == 'blue':
-        start = {(0, -3), (1, -3), (2, -3), (3, -3)}
+        start = [(-3, 3), (-3, 2), (-3, 1), (-3, 0)]
     elif colour == 'green':
-        start = {(3, 0), (2, 1), (1, 2), (0, 3)}
+        start = [(0, -3), (1, -3), (2, -3), (3, -3)]
+    elif colour == 'blue':
+        start = [(3, 0), (2, 1), (1, 2), (0, 3)]
 
     # Returns the final list of end_points/goals
     return start
-
 
 def initiate_board():
     """
@@ -55,6 +53,12 @@ def initiate_board():
     # Returns the final list of end_points/goals
     return board_dict
 
+def get_enemies(self):
+    enemies = []
+    for piece in self.board_dict:
+        if piece not in self.pieces:
+            enemies.append(piece)
+    return enemies
 
 def find_eaten(before_jump, after_jump):
     """
@@ -66,7 +70,6 @@ def find_eaten(before_jump, after_jump):
 
     eaten = (before_jump[0] + q_move, before_jump[1] + r_move)
     return eaten
-
 
 def get_adjacent(pos, adj_dict):
     """
@@ -108,7 +111,6 @@ def get_adjacent(pos, adj_dict):
     # returns final dictionary of all adjacent hexes
     return adj_dict
 
-
 def get_goals(colour):
     """
     This function returns a list of all the available goals
@@ -127,9 +129,7 @@ def get_goals(colour):
     # Returns the final list of end_points/goals
     return end_points
 
-
 def distance_fill(self, dist_dict, pos, dist):
-
     dist += 1
     # These '###' represents an unvisited hex
     if dist_dict[pos] == '###':
@@ -148,7 +148,7 @@ def distance_fill(self, dist_dict, pos, dist):
         jumpable = True
 
         # Set movable to False if it is blocked
-        if next_pos in self.board_dict and next_pos not in self.pieces:
+        if next_pos in self.enemies:
             movable = False
 
         # Check if can jump over the blocked piece, only happens when
@@ -158,7 +158,7 @@ def distance_fill(self, dist_dict, pos, dist):
             r_move = (next_pos[1] - pos[1])*2
             next_jump = (pos[0] + q_move, pos[1] + r_move)
             if (next_jump not in self.adj_dict[next_pos] or
-                    next_jump in self.board_dict):
+                    next_jump in self.enemies):
                 jumpable = False
 
         # Recurse through the appropriate movement: move or jump
@@ -166,7 +166,6 @@ def distance_fill(self, dist_dict, pos, dist):
             distance_fill(self, dist_dict, next_pos, dist)
         elif jumpable:
             distance_fill(self, dist_dict, next_jump, dist)
-
     return dist_dict
 
 
@@ -333,10 +332,10 @@ class Player:
         """
         This method is called once at the beginning of the game to initialise
         your player. You should use this opportunity to set up your own internal
-        representation of the game state, and any other information about the 
+        representation of the game state, and any other information about the
         game state you would like to maintain for the duration of the game.
-        The parameter colour will be a string representing the player your 
-        program will play as (Red, Green or Blue). The value will be one of the 
+        The parameter colour will be a string representing the player your
+        program will play as (Red, Green or Blue). The value will be one of the
         strings "red", "green", or "blue" correspondingly.
         """
         # TODO: Set up state representation.
@@ -354,34 +353,37 @@ class Player:
         empty_dict = {}
         self.adj_dict = get_adjacent((0, 0), empty_dict)
 
-        # Create an unvisited distance dictionary
-        self.dist_dict = create_dist_dict()
+        self.enemies = get_enemies(self)
 
     def action(self):
         """
-        This method is called at the beginning of each of your turns to request 
+        This method is called at the beginning of each of your turns to request
         a choice of action from your program.
-
-        Based on the current state of the game, your player should select and 
-        return an allowed action to play on this turn. If there are no allowed 
-        actions, your player must return a pass instead. The action (or pass) 
-        must be represented based on the above instructions for representing 
+        Based on the current state of the game, your player should select and
+        return an allowed action to play on this turn. If there are no allowed
+        actions, your player must return a pass instead. The action (or pass)
+        must be represented based on the above instructions for representing
         actions.
         """
+
         # Fill distance dictionary with the least distance from each goal
-        dist_dict = self.dist_dict
+        dist_dict = create_dist_dict()
         for goal in self.goals:
+            if goal in self.enemies:
+                continue
             distance = 0
             dist_dict = distance_fill(self, dist_dict, goal, distance)
 
-        print_board(dist_dict)
-
         # TODO: Decide what action to take.
         action = ("PASS", None)
+        # If no more pieces, end turn:
+        if not self.pieces:
+            return action
+
+        # Try exit move if possible
         for piece in self.pieces:
             if piece in self.goals:
                 action = ("EXIT", piece)
-                self.pieces.remove(piece)
                 return action
 
         # Get the best move possible for each piece
@@ -401,22 +403,21 @@ class Player:
             action = ("MOVE", (final_move[0], final_move[1]))
         elif final_move[2] == 'jump':
             action = ("JUMP", (final_move[0], final_move[1]))
-
         return action
 
     def update(self, colour, action):
         """
-        This method is called at the end of every turn (including your player’s 
-        turns) to inform your player about the most recent action. You should 
-        use this opportunity to maintain your internal representation of the 
+        This method is called at the end of every turn (including your player’s
+        turns) to inform your player about the most recent action. You should
+        use this opportunity to maintain your internal representation of the
         game state and any other information about the game you are storing.
         The parameter colour will be a string representing the player whose turn
-        it is (Red, Green or Blue). The value will be one of the strings "red", 
+        it is (Red, Green or Blue). The value will be one of the strings "red",
         "green", or "blue" correspondingly.
-        The parameter action is a representation of the most recent action (or 
+        The parameter action is a representation of the most recent action (or
         pass) conforming to the above in- structions for representing actions.
-        You may assume that action will always correspond to an allowed action 
-        (or pass) for the player colour (your method does not need to validate 
+        You may assume that action will always correspond to an allowed action
+        (or pass) for the player colour (your method does not need to validate
         the action/pass against the game rules).
         """
         # TODO: Update state representation in response to action.
@@ -426,7 +427,10 @@ class Player:
             self.board_dict[action[1][1]] = colour
             if colour == self.colour:
                 self.pieces.remove(action[1][0])
-                self.pieces.add(action[1][1])
+                self.pieces.append(action[1][1])
+            else:
+                self.enemies.remove(action[1][0])
+                self.enemies.append(action[1][1])
 
         elif action[0] == "JUMP":
             # TODO
@@ -435,7 +439,10 @@ class Player:
             self.board_dict[action[1][1]] = colour
             if colour == self.colour:
                 self.pieces.remove(action[1][0])
-                self.pieces.add(action[1][1])
+                self.pieces.append(action[1][1])
+            else:
+                self.enemies.remove(action[1][0])
+                self.enemies.append(action[1][1])
 
             # Changing the piece that was 'eaten'(jumped over) to the
             # colour of the piece making the jump
@@ -447,9 +454,11 @@ class Player:
             if colour != prev_colour:
                 self.board_dict[eaten] = colour
                 if self.colour == colour:
-                    self.pieces.add(eaten)
+                    self.pieces.append(eaten)
+                    self.enemies.remove(eaten)
                 elif self.colour == prev_colour:
                     self.pieces.remove(eaten)
+                    self.enemies.append(eaten)
 
         elif action[0] == "EXIT":
             # TODO
@@ -457,26 +466,24 @@ class Player:
             if self.colour == colour:
                 self.pieces.remove(action[1])
                 self.pieces_exited += 1
+            else:
+                self.enemies.remove(action[1])
 
 
 def print_board(board_dict, message="Testing Board Condition", debug=False):
     """
     Helper function to print a drawing of a hexagonal board's contents.
-
     Arguments:
-
     * `board_dict` -- dictionary with tuples for keys and anything printable
-    for values. The tuple keys are interpreted as hexagonal coordinates (using 
-    the axial coordinate system outlined in the project specification) and the 
-    values are formatted as strings and placed in the drawing at the corres- 
-    ponding location (only the first 5 characters of each string are used, to 
+    for values. The tuple keys are interpreted as hexagonal coordinates (using
+    the axial coordinate system outlined in the project specification) and the
+    values are formatted as strings and placed in the drawing at the corres-
+    ponding location (only the first 5 characters of each string are used, to
     keep the drawings small). Coordinates with missing values are left blank.
-
     Keyword arguments:
-
-    * `message` -- an optional message to include on the first line of the 
+    * `message` -- an optional message to include on the first line of the
     drawing (above the board) -- default `""` (resulting in a blank message).
-    * `debug` -- for a larger board drawing that includes the coordinates 
+    * `debug` -- for a larger board drawing that includes the coordinates
     inside each hex, set this to `True` -- default `False`.
     * Or, any other keyword arguments! They will be forwarded to `print()`.
     """
