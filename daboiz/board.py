@@ -6,15 +6,17 @@ import daboiz.helper as helper
 
 class Board:
 
-    board = helper.initiate_board()
     num_players = 3
-    turn = "red"
+
+    def __init__(self):
+        self.board = helper.initiate_board()
+        self.turn = "red"
 
     def start(self):
         # Returns a representation of the starting state of the game.
         return helper.initiate_board()
 
-    def current_player(self):
+    def current_player(self, state):
         # Takes the game state and returns the current player's
         # number.
         return self.turn
