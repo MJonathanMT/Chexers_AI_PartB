@@ -31,7 +31,7 @@ class Board:
             # Pass the work to a helper function
             return mcts_helper.update_board(prev_state, action, self.turn)
 
-    def legal_plays(self, state_history):
+    def legal_actions(self, state_history):
         # Takes a sequence of game states representing the full
         # game history, and returns the full list of moves that
         # are legal plays for the current player.

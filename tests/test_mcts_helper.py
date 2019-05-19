@@ -1,11 +1,10 @@
-# sys.append imports
 import sys
-sys.path.append("/Users/zacharyho/Documents/UoM/artificial_intelligence/AI_projB/AI_proj_B/daboiz")
+# sys.path.append("/Users/zacharyho/Documents/UoM/artificial_intelligence/AI_projB/AI_proj_B/daboiz")
+print(sys.path)
 import unittest
 # from daboiz import mcts_helper
-# from daboiz.hex import Hex
-import mcts_helper
-from hex import Hex
+from daboiz import mcts_helper
+from daboiz.hex import Hex
 
 
 # print(sys.path)
