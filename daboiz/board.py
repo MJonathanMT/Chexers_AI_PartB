@@ -1,35 +1,43 @@
 # Local imports
-import daboiz.helper as helper
-
-# Only one instance of Board
+import mcts_helper
 
 
 class Board:
+    """
+    Board class
+    """
 
     num_players = 3
 
     def __init__(self):
-        self.board = helper.initiate_board()
+        self.board = mcts_helper.initiate_board()
         self.turn = "red"
 
-    def start(self):
+    def starting_state(self):
         # Returns a representation of the starting state of the game.
-        return helper.initiate_board()
+        return self.board
 
-    def current_player(self, state):
-        # Takes the game state and returns the current player's
-        # number.
+    def current_player(self):
+        # Returns the current player colour
         return self.turn
 
-    def next_state(self, state, play):
-        # Takes the game state, and the move to be applied.
+    def next_state(self, prev_state, action):
+        # Takes the game state, and the action to be applied.
         # Returns the new game state.
-        pass
+        action_type = action[0]
+        if action_type == "PASS":
+            return prev_state
+        else:
+            # Pass the work to a helper function
+            return mcts_helper.update_board(prev_state, action, self.turn)
 
     def legal_plays(self, state_history):
         # Takes a sequence of game states representing the full
         # game history, and returns the full list of moves that
         # are legal plays for the current player.
+
+        state = state_history[-1]
+        
         pass
 
     def winner(self, state_history):
