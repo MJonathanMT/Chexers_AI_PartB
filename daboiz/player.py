@@ -14,7 +14,6 @@ class Player:
     #     program will play as (Red, Green or Blue). The value will be one of the
     #     strings "red", "green", or "blue" correspondingly.
     #     """
-    #     # TODO: Set up state representation.
 
     #     # Set up starting coordinates of pieces, and goals for our pieces
     #     self.colour = colour
@@ -49,7 +48,6 @@ class Player:
     #         distance = 0
     #         dist_dict = helper.distance_fill(self, dist_dict, goal, distance)
 
-    #     # TODO: Decide what action to take.
     #     action = ("PASS", None)
     #     for piece in self.pieces:
     #         if piece in self.goals:
@@ -91,7 +89,6 @@ class Player:
     #     (or pass) for the player colour (your method does not need to validate
     #     the action/pass against the game rules).
     #     """
-    #     # TODO: Update state representation in response to action.
 
     #     if action[0] == "MOVE":
     #         del self.board_dict[action[1][0]]
@@ -101,7 +98,6 @@ class Player:
     #             self.pieces.add(action[1][1])
 
     #     elif action[0] == "JUMP":
-    #         # TODO
 
     #         del self.board_dict[action[1][0]]
     #         self.board_dict[action[1][1]] = colour
@@ -124,7 +120,6 @@ class Player:
     #                 self.pieces.remove(eaten)
 
     #     elif action[0] == "EXIT":
-    #         # TODO
     #         del self.board_dict[action[1]]
     #         if self.colour == colour:
     #             self.pieces.remove(action[1])
@@ -140,7 +135,6 @@ class Player:
         program will play as (Red, Green or Blue). The value will be one of the 
         strings "red", "green", or "blue" correspondingly.
         """
-        # TODO: Set up state representation.
         # Zach's MCTS version
         self.colour = colour
         self.pieces = helper.get_start(colour)

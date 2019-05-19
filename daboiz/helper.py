@@ -13,6 +13,11 @@ def get_finish(colour):
     elif colour == 'green':
         finish = {(-3, 3), (-2, 3), (-1, 3), (0, 3)}
 
+    ### TESTING PURPOSES
+    # TODO: Remove when submitting
+    # if colour == 'red':
+    #     finish = {(0, 0)}
+
     # Returns the final list of end_points/goals
     return finish
 
