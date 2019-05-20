@@ -196,10 +196,16 @@ class GameState:
         return WinState.ONGOING
 
     def is_terminal(self):
+        # Check if any colour has already gotten 4 pieces off the board
         for colour_exited in self.pieces_exited:
             if colour_exited >= 4:
                 return 1
-        return 0
+        # Check if there are any self pieces left on the board
+        self_pieces_remaining = 0
+        for hex in self.board:
+            if hex[1] == self.turn:
+                self_pieces_remaining = 1
+        return self_pieces_remaining
 
     def get_reward(self):
         player_index = 0

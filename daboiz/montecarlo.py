@@ -131,6 +131,8 @@ class mcts():
         :return: the new expanded node
         """
         actions = node.state.legal_actions()
+        print("actions are")
+        print(actions)
         for action in actions:
             if action not in node.children.keys():
                 # use zach's take action

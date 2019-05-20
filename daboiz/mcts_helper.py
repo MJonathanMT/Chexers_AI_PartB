@@ -86,8 +86,8 @@ def get_adjacent(current):
         adjacent_list.append((next_q, next_r))
 
     # returns list of all adjacent hexes of the current hex (disregard if adjacents are blocked or not)
-    print("adjacent list is")
-    print(adjacent_list)
+    # print("adjacent list is")
+    # print(adjacent_list)
     return adjacent_list
 
 
