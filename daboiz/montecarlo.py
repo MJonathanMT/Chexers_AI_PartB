@@ -2,28 +2,59 @@ import math
 import random
 import time
 
+def random_policy(state):
+    while not state.isTerminal():
+        try:
+            action = random.choice(state.legal_actions())
+        except IndexError:
+            raise Exception(
+                "Non-terminal state has no possible actions: " + str(state))
+        state = state.next_state(action)
+    return state.get_reward()
+
+def get_reward():
+    current_reward = 0
+    # distance each piece from the goal
+    # formula -> 6 - distance of piece from goal
+
+    # how many pieces on the board
+    # formula (number of pieces - 4)*2?
+
+    # how many exits the current player have
+    # formula numb_exits *3
+
+    # how many pieces stand alone without adjacent pieces
+    # formula number pieces adjacentt - piece not adjacent
+
+    return current_reward
+
 class treeNode():
     def __init__(self, state, parent):
         self.state = state
-        self.isTerminal = state.isTerminal()
-        self.isFullyExpanded = self.isTerminal
+        self.is_terminal = state.is_terminal()
+        self.is_fully_expanded = self.is_terminal
         self.parent = parent
+        self.num_visits = 0
+        self.total_reward = 0
         self.children = {}
+
 
 class mcts():
     # init function still up for changes
-    def __init__(self, time_limit=None):
+    def __init__(self, time_limit=None, exploration_constant = 1/math.sqrt(2),
+                 roll_out_policy = random_policy):
         """
         init function?
         :param time_limit: time limit of the whole program
         """
-                 # , rolloutPolicy=randomPolicy):
-        if time_limit != None:
+        if time_limit is not None:
            # time taken for each MCTS search in milliseconds
-            self.timeLimit = time_limit
-            self.limitType = 'time'
-        # self.rollout = rolloutPolicy
+            self.time_limit = time_limit
+            self.limit_type = 'time'
+        self.roll_out = roll_out_policy
+        self.exploration_constant = exploration_constant
         self.root = ()
+
 
     # main search function
     def search(self, initial_state):
@@ -35,11 +66,11 @@ class mcts():
         # Initial root (None for parent)
         root = treeNode(initial_state, None)
         # 1. implement time? set time maybe idk
-        time_limit = time.time() + self.timeLimit/1000
+        time_limit = time.time() + self.time_limit/1000
         while time.time() < time_limit:
             self.execute_round(root)
         best_child = self.get_best_child(root, 0)
-        return self.getAction(self.root, best_child)
+        return self.get_action(root, best_child)
 
     def execute_round(self, root):
         """
@@ -49,7 +80,7 @@ class mcts():
         node = self.select_node(root)
         # 2. need to implement points system for state in state class
         # 4. idk what roll out is taking alook later, we might need it
-        reward = self.rollout(node.state)
+        reward = self.roll_out(node.state)
 
         self.backpropogate(node, reward)
 
@@ -59,8 +90,8 @@ class mcts():
         :param node: The current node
         :return: The current node with the best child
         """
-        while not node.isTerminal:
-            if node.isFullyExpanded:
+        while not node.is_terminal:
+            if node.is_fully_expanded:
                 node = self.get_best_child(node, self.exploration_constant)
             else:
                 return self.expand(node)
@@ -80,9 +111,8 @@ class mcts():
 
         #
         for child in node.children.values():
-            # 3. Formula can be changed
-            node_value = child.totalReward / child.numVisits + exploration_value * math.sqrt(
-                2 * math.log(node.numVisits) / child.numVisits)
+            node_value = child.total_reward / child.num_visits + exploration_value * math.sqrt(
+                2 * math.log(node.num_visits) / child.num_visits)
             if node_value > best_value:
                 best_value = node_value
                 best_nodes = [child]
@@ -97,14 +127,14 @@ class mcts():
         :param node: The current node
         :return: the new expanded node
         """
-        actions = node.state.getPossibleAction()
+        actions = node.state.legal_actions()
         for action in actions:
             if action not in node.child.keys():
                 # use zach's take action
-                new_node = treeNode(node.state.takeAction(action), node)
+                new_node = treeNode(node.state.next_state(action), node)
                 node.children[action] = new_node
                 if len(actions) == len(node.children):
-                    node.isFullyExpanded = True
+                    node.is_fully_expanded = True
                 return new_node
 
     @staticmethod
@@ -115,6 +145,12 @@ class mcts():
         :param reward: value of the node?
         """
         while node is not None:
-            node.numVisits += 1
-            node.totalReward += reward
+            node.num_visits += 1
+            node.total_reward += reward
             node = node.parent
+
+    @staticmethod
+    def get_action(root, best_child):
+        for action, node in root.children.items():
+            if node is best_child:
+                return action
