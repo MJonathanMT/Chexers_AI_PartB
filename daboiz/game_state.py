@@ -25,7 +25,7 @@ class GameState:
         # Returns the current player colour
         return self.turn
 
-    def next_state(self, prev_state, action):
+    def next_state(self, action):
         # Takes the game state, and the action to be applied.
         # Returns the new game state.
 
@@ -40,19 +40,19 @@ class GameState:
             if (action[0] == "EXIT"):
                 # Loop through all the hexes to look for hexes interacted
                 i = 0
-                while (i < len(prev_state)):
+                while (i < len(self.board)):
                     current_hex = Hex(action[1][0], action[1][1])
 
                     # Once we find the hex coordinates that the piece exited FROM
-                    if (prev_state[i][0] == current_hex):
+                    if (self.board[i][0] == current_hex):
                         # Create a new (Hex, "updated type") and put in the state tuple
-                        exit_hex = (prev_state[i][0], "empty")
+                        exit_hex = (self.board[i][0], "empty")
                         new_board.append(exit_hex)
                         # state += (exit_hex,)
 
                     # Just append the other uninteracted hexes into state
                     else:
-                        new_board.append(prev_state[i])
+                        new_board.append(self.board[i])
                         # state += (prev_state[i],)
                     i += 1
                 updated_pieces_exited = []
@@ -78,7 +78,7 @@ class GameState:
 
                 # Loop through all the hexes to look for hexes interacted
                 i = 0
-                while (i < len(prev_state)):
+                while (i < len(self.board)):
 
                     # If the action was a JUMP, we need to change the piece that was jumped over to the colour
                     # of the piece that jumped (it got EATEN!)
@@ -87,28 +87,28 @@ class GameState:
                             before_hex.coordinates, next_hex.coordinates)
                         eaten_hex = Hex(
                             eaten_hex_coordinates[0], eaten_hex_coordinates[1])
-                        if (prev_state[i][0] == eaten_hex):
-                            updated_eaten_hex = (prev_state[i][0], self.turn)
+                        if (self.board[i][0] == eaten_hex):
+                            updated_eaten_hex = (self.board[i][0], self.turn)
                             new_board.append(updated_eaten_hex)
                             # state += (updated_eaten_hex,)
                             i += 1
                             continue
 
                     # Once we find the hex coordinates that the piece acted FROM
-                    if (prev_state[i][0] == before_hex):
+                    if (self.board[i][0] == before_hex):
                         # Create a new (Hex, "updated type") and put in the state tuple
-                        updated_before_hex = (prev_state[i][0], "empty")
+                        updated_before_hex = (self.board[i][0], "empty")
                         new_board.append(updated_before_hex)
                         # state += (updated_before_hex,)
                     # Once we find the hex coordinates that the piece acted TO
-                    elif (prev_state[i][0] == next_hex):
+                    elif (self.board[i][0] == next_hex):
                         # Create a new (Hex, "updated type") and put in the state tuple
-                        updated_next_hex = (prev_state[i][0], self.turn)
+                        updated_next_hex = (self.board[i][0], self.turn)
                         new_board.append(updated_next_hex)
                         # state += (updated_next_hex,)
                     # Just append the other uninteracted hexes into state
                     else:
-                        new_board.append(prev_state[i])
+                        new_board.append(self.board[i])
                         # state += (prev_state[i],)
                     new_state.pieces_exited = self.pieces_exited
                     i += 1
@@ -164,8 +164,8 @@ class GameState:
                 current_hex_adjacents = mcts_helper.get_adjacent(
                     hex[0].coordinates)
                 for adj in current_hex_adjacents:
-                    print("adjacent is ")
-                    print(adj)
+                    # print("adjacent is ")
+                    # print(adj)
                     # Check if MOVE action is possible for all adj hexes, append if yes
                     if board_dict[adj] == "empty":
                         all_actions.append(("MOVE", (hex[0].coordinates, adj)))

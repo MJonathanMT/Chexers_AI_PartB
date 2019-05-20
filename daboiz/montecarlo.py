@@ -2,8 +2,9 @@ import math
 import random
 import time
 
+
 def random_policy(state):
-    while not state.isTerminal():
+    while not state.is_terminal():
         try:
             action = random.choice(state.legal_actions())
         except IndexError:
@@ -11,6 +12,7 @@ def random_policy(state):
                 "Non-terminal state has no possible actions: " + str(state))
         state = state.next_state(action)
     return state.get_reward()
+
 
 def get_reward():
     current_reward = 0
@@ -28,6 +30,7 @@ def get_reward():
 
     return current_reward
 
+
 class treeNode():
     def __init__(self, state, parent):
         self.state = state
@@ -41,8 +44,8 @@ class treeNode():
 
 class mcts():
     # init function still up for changes
-    def __init__(self, time_limit=None, exploration_constant = 1/math.sqrt(2),
-                 roll_out_policy = random_policy):
+    def __init__(self, time_limit=None, exploration_constant=1/math.sqrt(2),
+                 roll_out_policy=random_policy):
         """
         init function?
         :param time_limit: time limit of the whole program
@@ -55,8 +58,8 @@ class mcts():
         self.exploration_constant = exploration_constant
         self.root = ()
 
-
     # main search function
+
     def search(self, initial_state):
         """
         Main search function for the mct
@@ -129,7 +132,7 @@ class mcts():
         """
         actions = node.state.legal_actions()
         for action in actions:
-            if action not in node.child.keys():
+            if action not in node.children.keys():
                 # use zach's take action
                 new_node = treeNode(node.state.next_state(action), node)
                 node.children[action] = new_node
