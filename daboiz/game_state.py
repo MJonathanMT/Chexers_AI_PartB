@@ -177,7 +177,8 @@ class GameState:
                             if board_dict[hex_landed] == "empty":
                                 all_actions.append(
                                     ("JUMP", (hex[0].coordinates, hex_landed)))
-
+        print("legal actions are")
+        print(all_actions)
         return all_actions
 
     def winner(self):
@@ -205,7 +206,7 @@ class GameState:
         for hex in self.board:
             if hex[1] == self.turn:
                 self_pieces_remaining = 1
-        return self_pieces_remaining
+        return not self_pieces_remaining
 
     def get_reward(self):
         player_index = 0
