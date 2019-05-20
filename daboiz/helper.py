@@ -13,7 +13,7 @@ def get_finish(colour):
     elif colour == 'green':
         finish = {(-3, 3), (-2, 3), (-1, 3), (0, 3)}
 
-    ### TESTING PURPOSES
+    # TESTING PURPOSES
     # TODO: Remove when submitting
     # if colour == 'red':
     #     finish = {(0, 0)}
@@ -32,9 +32,9 @@ def get_start(colour):
     start = {}
     if colour == 'red':
         start = {(-3, 3), (-3, 2), (-3, 1), (-3, 0)}
-    elif colour == 'blue':
-        start = {(0, -3), (1, -3), (2, -3), (3, -3)}
     elif colour == 'green':
+        start = {(0, -3), (1, -3), (2, -3), (3, -3)}
+    elif colour == 'blue':
         start = {(3, 0), (2, 1), (1, 2), (0, 3)}
 
     # Returns the final list of end_points/goals
@@ -57,7 +57,7 @@ def initiate_board():
         elif q+r == 3:
             board_dict[(q, r)] = "blue"
 
-    ### Testing purposes
+    # Testing purposes
     # TODO: Remove when submitting
     # board_dict = {}
     # ran = range(0, 5)

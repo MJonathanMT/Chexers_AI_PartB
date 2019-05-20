@@ -94,7 +94,6 @@ class mcts():
         :return: The current node with the best child
         """
         while not node.is_terminal:
-            print("is this run")
             if node.is_fully_expanded:
                 node = self.get_best_child(node, self.exploration_constant)
             else:
@@ -132,8 +131,6 @@ class mcts():
         :return: the new expanded node
         """
         actions = node.state.legal_actions()
-        print("actions are")
-        print(actions)
         for action in actions:
             if action not in node.children.keys():
                 # use zach's take action

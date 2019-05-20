@@ -177,8 +177,8 @@ class GameState:
                             if board_dict[hex_landed] == "empty":
                                 all_actions.append(
                                     ("JUMP", (hex[0].coordinates, hex_landed)))
-        print("legal actions are")
-        print(all_actions)
+        # print("legal actions are")
+        # print(all_actions)
         return all_actions
 
     def winner(self):

@@ -44,12 +44,12 @@ class Player:
         actions.
         """
 
-        initial_state = GameState(mcts_helper.convert_board(self.board_dict), self.colour, self.all_pieces_exited)
-        monte_carlo = mcts(time_limit = 1000)
+        initial_state = GameState(mcts_helper.convert_board(
+            self.board_dict), self.colour, self.all_pieces_exited)
+        monte_carlo = mcts(time_limit=1000)
         action = monte_carlo.search(initial_state=initial_state)
 
         return action
-
 
     # def action(self):
         # """
@@ -152,21 +152,21 @@ class Player:
                 elif self.colour == "green":
                     all_pieces_exited.append(self.all_pieces_exited[0])
                     all_pieces_exited.append(self.all_pieces_exited[1] + 1)
-                    all_pieces_exited.append(self.all_pieces_exited[2])   
+                    all_pieces_exited.append(self.all_pieces_exited[2])
                 elif self.colour == "blue":
                     all_pieces_exited.append(self.all_pieces_exited[0])
                     all_pieces_exited.append(self.all_pieces_exited[1])
-                    all_pieces_exited.append(self.all_pieces_exited[2] + 1) 
-                self.all_pieces_exited = tuple(all_pieces_exited)                
+                    all_pieces_exited.append(self.all_pieces_exited[2] + 1)
+                self.all_pieces_exited = tuple(all_pieces_exited)
 
     # def __init__(self, colour):
     #     """
     #     This method is called once at the beginning of the game to initialise
     #     your player. You should use this opportunity to set up your own internal
-    #     representation of the game state, and any other information about the 
+    #     representation of the game state, and any other information about the
     #     game state you would like to maintain for the duration of the game.
-    #     The parameter colour will be a string representing the player your 
-    #     program will play as (Red, Green or Blue). The value will be one of the 
+    #     The parameter colour will be a string representing the player your
+    #     program will play as (Red, Green or Blue). The value will be one of the
     #     strings "red", "green", or "blue" correspondingly.
     #     """
     #     # Zach's MCTS version
