@@ -6,6 +6,8 @@ from daboiz.hex import Hex
 from daboiz import helper
 
 # Tested
+
+
 def initiate_board():
     """
     This function initiates our representation of the game board
@@ -85,6 +87,7 @@ def get_adjacent(current):
     # returns list of all adjacent hexes of the current hex (disregard if adjacents are blocked or not)
     return adjacent_list
 
+
 def hex_after_jump(hex_before, hex_eaten):
     """
     This function returns the coordinates for the hex where a piece lands after it does a JUMP action
@@ -100,22 +103,23 @@ def hex_after_jump(hex_before, hex_eaten):
 
     return hex_landed
 
+
 def convert_board(board_dict):
     board = []
 
     ran = range(-3, 4)
     for (q, r) in [(q, r) for q in ran for r in ran if -q - r in ran]:
-
-        if board_dict[(q, r)] == "red":
-            board.append((Hex(q, r), "red"))
-        elif board_dict[(q, r)] == "green":
-            board.append((Hex(q, r), "green"))
-        elif board_dict[(q, r)] == "blue":
-            board.append((Hex(q, r), "blue"))
+        if (q, r) in board_dict:
+            if board_dict[(q, r)] == "red":
+                board.append((Hex(q, r), "red"))
+            elif board_dict[(q, r)] == "green":
+                board.append((Hex(q, r), "green"))
+            elif board_dict[(q, r)] == "blue":
+                board.append((Hex(q, r), "blue"))
         else:
             board.append((Hex(q, r), "empty"))
 
-    ### Testing purposes
+    # Testing purposes
     # TODO: Remove before submitting
     # ran = range(0, 5)
     # for r in ran:

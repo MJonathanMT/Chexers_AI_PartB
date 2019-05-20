@@ -1,6 +1,6 @@
 # Local imports
 from daboiz import mcts_helper
-from daboiz import  helper
+from daboiz import helper
 from daboiz.hex import Hex
 from daboiz.winstate import WinState
 
@@ -28,7 +28,7 @@ class GameState:
     def next_state(self, prev_state, action):
         # Takes the game state, and the action to be applied.
         # Returns the new game state.
-        
+
         new_state = copy.deepcopy(self)
         new_board = []
         if action[0] == "PASS":
@@ -63,13 +63,13 @@ class GameState:
                 elif self.turn == "green":
                     updated_pieces_exited.append(self.pieces_exited[0])
                     updated_pieces_exited.append(self.pieces_exited[1] + 1)
-                    updated_pieces_exited.append(self.pieces_exited[2])  
+                    updated_pieces_exited.append(self.pieces_exited[2])
                 elif self.turn == "blue":
                     updated_pieces_exited.append(self.pieces_exited[0])
                     updated_pieces_exited.append(self.pieces_exited[1])
                     updated_pieces_exited.append(self.pieces_exited[2] + 1)
 
-                new_state.pieces_exited = tuple(updated_pieces_exited)           
+                new_state.pieces_exited = tuple(updated_pieces_exited)
 
             # When action is JUMP or MOVE
             else:
@@ -118,12 +118,11 @@ class GameState:
             new_board = tuple(new_board)
             # state = tuple(
             #     sorted(state, key=lambda hex: (hex[0].coordinates)))
-        
+
         new_state.board = new_board
         new_state.update_turn(self.turn)
 
         return new_state
-
 
     def update_turn(self, current_player):
         if current_player == "red":
@@ -133,20 +132,18 @@ class GameState:
         elif current_player == "blue":
             self.turn = "red"
 
-    def legal_actions(self, state_history):
+    def legal_actions(self):
         # Takes a sequence of game states representing the full
         # game history, and returns the full list of moves that
         # are legal plays for the current player.
 
-        board = state_history[-1]
-
+        board = self.board
 
         # Create a dictionary for searching purposes
         board_dict = {}
         for hex in board:
             board_dict[hex[0].coordinates] = hex[1]
 
-        
         all_actions = []
 
         # Loop through all Hexes in the board state and finds all the current
@@ -158,17 +155,20 @@ class GameState:
                     all_actions.append(("EXIT", hex[0].coordinates))
 
                 # Get all 6 adjacent hexes of the current hex
-                current_hex_adjacents = mcts_helper.get_adjacent(hex[0].coordinates)
+                current_hex_adjacents = mcts_helper.get_adjacent(
+                    hex[0].coordinates)
                 for adj in current_hex_adjacents:
                     # Check if MOVE action is possible for all adj hexes, append if yes
                     if board_dict[adj] == "empty":
                         all_actions.append(("MOVE", (hex[0].coordinates, adj)))
                     # Otherwise check if JUMP action is possible, append if yes
                     else:
-                        hex_landed = mcts_helper.hex_after_jump(hex[0].coordinates, adj)
+                        hex_landed = mcts_helper.hex_after_jump(
+                            hex[0].coordinates, adj)
                         if board_dict[hex_landed] == "empty":
-                            all_actions.append(("JUMP", (hex[0].coordinates, hex_landed)))
-        
+                            all_actions.append(
+                                ("JUMP", (hex[0].coordinates, hex_landed)))
+
         return all_actions
 
     def winner(self):
@@ -186,6 +186,12 @@ class GameState:
                     return WinState.BLUE
         return WinState.ONGOING
 
+    def is_terminal(self):
+        for colour_exited in self.pieces_exited:
+            if colour_exited >= 4:
+                return 1
+        return 0
+
     def get_reward(self):
         player_index = 0
         if self.turn == "red":
@@ -201,5 +207,3 @@ class GameState:
                     return 1
                 else:
                     return 0
-
-
