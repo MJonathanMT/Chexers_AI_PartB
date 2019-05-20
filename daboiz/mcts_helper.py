@@ -68,6 +68,7 @@ def get_adjacent(current):
 
     all_moves = [(0, -1), (1, -1), (1, 0), (0, 1), (-1, 1), (-1, 0)]
     adjacent_list = []
+    ran = range(-3, 4)
     # Iterate through all moves to check if its within the board
     for move in all_moves:
         next_q = current[0] + move[0]
@@ -85,6 +86,8 @@ def get_adjacent(current):
         adjacent_list.append((next_q, next_r))
 
     # returns list of all adjacent hexes of the current hex (disregard if adjacents are blocked or not)
+    print("adjacent list is")
+    print(adjacent_list)
     return adjacent_list
 
 
@@ -100,6 +103,10 @@ def hex_after_jump(hex_before, hex_eaten):
     r_jump = hex_eaten[1] - hex_before[1]
 
     hex_landed = (hex_eaten[0] + q_jump, hex_eaten[1] + r_jump)
+    # If it is not within the board range, skip this move (continue)
+    if not (abs(hex_landed[0]) <= 3 and abs(hex_landed[1]) <= 3
+            and abs(hex_landed[0]+hex_landed[1]) <= 3):
+        return 0
 
     return hex_landed
 

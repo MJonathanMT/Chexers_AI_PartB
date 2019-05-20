@@ -141,9 +141,15 @@ class GameState:
 
         # Create a dictionary for searching purposes
         board_dict = {}
+        # i = 0
         for hex in board:
             board_dict[hex[0].coordinates] = hex[1]
-
+            # print("Coordinate is")
+            # print(hex[0].coordinates)
+            # print("hex type is")
+            # print(hex[1])
+            # i += 1
+            # print(i)
         all_actions = []
 
         # Loop through all Hexes in the board state and finds all the current
@@ -158,16 +164,19 @@ class GameState:
                 current_hex_adjacents = mcts_helper.get_adjacent(
                     hex[0].coordinates)
                 for adj in current_hex_adjacents:
+                    print("adjacent is ")
+                    print(adj)
                     # Check if MOVE action is possible for all adj hexes, append if yes
                     if board_dict[adj] == "empty":
                         all_actions.append(("MOVE", (hex[0].coordinates, adj)))
                     # Otherwise check if JUMP action is possible, append if yes
                     else:
-                        hex_landed = mcts_helper.hex_after_jump(
-                            hex[0].coordinates, adj)
-                        if board_dict[hex_landed] == "empty":
-                            all_actions.append(
-                                ("JUMP", (hex[0].coordinates, hex_landed)))
+                        if not mcts_helper.hex_after_jump(hex[0].coordinates, adj) == 0:
+                            hex_landed = mcts_helper.hex_after_jump(
+                                hex[0].coordinates, adj)
+                            if board_dict[hex_landed] == "empty":
+                                all_actions.append(
+                                    ("JUMP", (hex[0].coordinates, hex_landed)))
 
         return all_actions
 
