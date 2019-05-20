@@ -1,6 +1,7 @@
 from daboiz import helper
 from daboiz import mcts_helper
 from daboiz.game_state import GameState
+from daboiz.montecarlo import mcts
 
 
 class Player:
@@ -19,7 +20,7 @@ class Player:
         self.colour = colour
         self.pieces = helper.get_start(colour)
         self.goals = helper.get_finish(colour)
-        self.pieces_exited = 0
+        self.all_pieces_exited = (0, 0, 0)
 
         # Set up our representation of the game_board
         self.board_dict = helper.initiate_board()
@@ -31,17 +32,36 @@ class Player:
         # Create an unvisited distance dictionary
         self.dist_dict = helper.create_dist_dict()
 
-    # def action(self):
-    #     """
-    #     This method is called at the beginning of each of your turns to request
-    #     a choice of action from your program.
+    def action(self):
+        """
+        This method is called at the beginning of each of your turns to request
+        a choice of action from your program.
 
-    #     Based on the current state of the game, your player should select and
-    #     return an allowed action to play on this turn. If there are no allowed
-    #     actions, your player must return a pass instead. The action (or pass)
-    #     must be represented based on the above instructions for representing
-    #     actions.
-    #     """
+        Based on the current state of the game, your player should select and
+        return an allowed action to play on this turn. If there are no allowed
+        actions, your player must return a pass instead. The action (or pass)
+        must be represented based on the above instructions for representing
+        actions.
+        """
+
+        initial_state = GameState(mcts_helper.convert_board(self.board_dict), self.colour, self.all_pieces_exited)
+        monte_carlo = mcts(time_limit = 1000)
+        action = monte_carlo.search(initial_state=initial_state)
+
+        return action
+
+
+    # def action(self):
+        # """
+        # This method is called at the beginning of each of your turns to request
+        # a choice of action from your program.
+
+        # Based on the current state of the game, your player should select and
+        # return an allowed action to play on this turn. If there are no allowed
+        # actions, your player must return a pass instead. The action (or pass)
+        # must be represented based on the above instructions for representing
+        # actions.
+        # """
     #     # Fill distance dictionary with the least distance from each goal
     #     dist_dict = self.dist_dict
     #     for goal in self.goals:
@@ -123,7 +143,21 @@ class Player:
             del self.board_dict[action[1]]
             if self.colour == colour:
                 self.pieces.remove(action[1])
-                self.pieces_exited += 1
+
+                all_pieces_exited = []
+                if self.colour == "red":
+                    all_pieces_exited.append(self.all_pieces_exited[0] + 1)
+                    all_pieces_exited.append(self.all_pieces_exited[1])
+                    all_pieces_exited.append(self.all_pieces_exited[2])
+                elif self.colour == "green":
+                    all_pieces_exited.append(self.all_pieces_exited[0])
+                    all_pieces_exited.append(self.all_pieces_exited[1] + 1)
+                    all_pieces_exited.append(self.all_pieces_exited[2])   
+                elif self.colour == "blue":
+                    all_pieces_exited.append(self.all_pieces_exited[0])
+                    all_pieces_exited.append(self.all_pieces_exited[1])
+                    all_pieces_exited.append(self.all_pieces_exited[2] + 1) 
+                self.all_pieces_exited = tuple(all_pieces_exited)                
 
     # def __init__(self, colour):
     #     """

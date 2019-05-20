@@ -99,3 +99,36 @@ def hex_after_jump(hex_before, hex_eaten):
     hex_landed = (hex_eaten[0] + q_jump, hex_eaten[1] + r_jump)
 
     return hex_landed
+
+def convert_board(board_dict):
+    board = []
+
+    ran = range(-3, 4)
+    for (q, r) in [(q, r) for q in ran for r in ran if -q - r in ran]:
+
+        if board_dict[(q, r)] == "red":
+            board.append((Hex(q, r), "red"))
+        elif board_dict[(q, r)] == "green":
+            board.append((Hex(q, r), "green"))
+        elif board_dict[(q, r)] == "blue":
+            board.append((Hex(q, r), "blue"))
+        else:
+            board.append((Hex(q, r), "empty"))
+
+    ### Testing purposes
+    # TODO: Remove before submitting
+    # ran = range(0, 5)
+    # for r in ran:
+    #     if board_dict[(0, r)] == "red":
+    #         board.append((Hex(0, r), "red"))
+    #     elif board_dict[(0, r)] == "green":
+    #         board.append((Hex(0, r), "green"))
+    #     if board_dict[(0, r)] == "blue":
+    #         board.append((Hex(0, r), "blue"))
+    #     if board_dict[(0, r)] == "empty":
+    #         board.append((Hex(0, r), "empty"))
+
+    # Sort the board by Hex
+    board = tuple(sorted(board, key=lambda hex: (hex[0].coordinates)))
+
+    return board

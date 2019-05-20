@@ -57,6 +57,20 @@ def initiate_board():
         elif q+r == 3:
             board_dict[(q, r)] = "blue"
 
+    ### Testing purposes
+    # TODO: Remove when submitting
+    # board_dict = {}
+    # ran = range(0, 5)
+    # for r in ran:
+    #     if r == 0:
+    #         board_dict[(0, r)] = "red"
+    #     elif r == 1:
+    #         board_dict[(0, r)] = "green"
+    #     elif r == 2:
+    #         board_dict[(0, r)] = "blue"
+    #     else:
+    #         board_dict[(0, r)] = "empty"
+
     # Returns the final list of end_points/goals
     return board_dict
 
