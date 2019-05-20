@@ -14,21 +14,21 @@ def random_policy(state):
     return state.get_reward()
 
 
-def get_reward():
-    current_reward = 0
-    # distance each piece from the goal
-    # formula -> 6 - distance of piece from goal
+# def get_reward():
+#     current_reward = 0
+#     # distance each piece from the goal
+#     # formula -> 6 - distance of piece from goal
 
-    # how many pieces on the board
-    # formula (number of pieces - 4)*2?
+#     # how many pieces on the board
+#     # formula (number of pieces - 4)*2?
 
-    # how many exits the current player have
-    # formula numb_exits *3
+#     # how many exits the current player have
+#     # formula numb_exits *3
 
-    # how many pieces stand alone without adjacent pieces
-    # formula number pieces adjacentt - piece not adjacent
+#     # how many pieces stand alone without adjacent pieces
+#     # formula number pieces adjacentt - piece not adjacent
 
-    return current_reward
+#     return current_reward
 
 
 class treeNode():
