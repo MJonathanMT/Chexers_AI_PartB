@@ -8,22 +8,18 @@ from daboiz.winstate import WinState
 import copy
 
 
-class Board:
+class GameState:
     """
     Board class
     """
 
     def __init__(self, start, player, pieces_exited):
         # ((Hex, "type"), (Hex, "type"),...)
-        self.state = start
+        self.board = start
         # "red"/"green"/"blue"
         self.turn = player
         # (1, 2, 3) in order (r, g, b)
         self.pieces_exited = pieces_exited
-
-    def starting_state(self):
-        # Returns a representation of the starting state of the game.
-        return self.state
 
     def current_player(self):
         # Returns the current player colour
@@ -32,12 +28,16 @@ class Board:
     def next_state(self, prev_state, action):
         # Takes the game state, and the action to be applied.
         # Returns the new game state.
-        action_type = action[0]
-        if action_type == "PASS":
-            state =  prev_state
+        
+        new_state = copy.deepcopy(self)
+        new_board = []
+        if action[0] == "PASS":
+            new_board = self.board
+            new_state.pieces_exited = self.pieces_exited
+            # state =  prev_state
         else:
-            state = ()
-            if (action_type == "EXIT"):
+            # state = ()
+            if (action[0] == "EXIT"):
                 # Loop through all the hexes to look for hexes interacted
                 i = 0
                 while (i < len(prev_state)):
@@ -47,11 +47,13 @@ class Board:
                     if (prev_state[i][0] == current_hex):
                         # Create a new (Hex, "updated type") and put in the state tuple
                         exit_hex = (prev_state[i][0], "empty")
-                        state += (exit_hex,)
+                        new_board.append(exit_hex)
+                        # state += (exit_hex,)
 
                     # Just append the other uninteracted hexes into state
                     else:
-                        state += (prev_state[i],)
+                        new_board.append(prev_state[i])
+                        # state += (prev_state[i],)
                     i += 1
                 updated_pieces_exited = []
                 if self.turn == "red":
@@ -67,7 +69,7 @@ class Board:
                     updated_pieces_exited.append(self.pieces_exited[1])
                     updated_pieces_exited.append(self.pieces_exited[2] + 1)
 
-                self.pieces_exited = tuple(updated_pieces_exited)           
+                new_state.pieces_exited = tuple(updated_pieces_exited)           
 
             # When action is JUMP or MOVE
             else:
@@ -80,14 +82,15 @@ class Board:
 
                     # If the action was a JUMP, we need to change the piece that was jumped over to the colour
                     # of the piece that jumped (it got EATEN!)
-                    if (action_type == "JUMP"):
+                    if (action[0] == "JUMP"):
                         eaten_hex_coordinates = helper.find_eaten(
                             before_hex.coordinates, next_hex.coordinates)
                         eaten_hex = Hex(
                             eaten_hex_coordinates[0], eaten_hex_coordinates[1])
                         if (prev_state[i][0] == eaten_hex):
                             updated_eaten_hex = (prev_state[i][0], self.turn)
-                            state += (updated_eaten_hex,)
+                            new_board.append(updated_eaten_hex)
+                            # state += (updated_eaten_hex,)
                             i += 1
                             continue
 
@@ -95,24 +98,31 @@ class Board:
                     if (prev_state[i][0] == before_hex):
                         # Create a new (Hex, "updated type") and put in the state tuple
                         updated_before_hex = (prev_state[i][0], "empty")
-                        state += (updated_before_hex,)
+                        new_board.append(updated_before_hex)
+                        # state += (updated_before_hex,)
                     # Once we find the hex coordinates that the piece acted TO
                     elif (prev_state[i][0] == next_hex):
                         # Create a new (Hex, "updated type") and put in the state tuple
                         updated_next_hex = (prev_state[i][0], self.turn)
-                        state += (updated_next_hex,)
+                        new_board.append(updated_next_hex)
+                        # state += (updated_next_hex,)
                     # Just append the other uninteracted hexes into state
                     else:
-                        state += (prev_state[i],)
+                        new_board.append(prev_state[i])
+                        # state += (prev_state[i],)
+                    new_state.pieces_exited = self.pieces_exited
                     i += 1
 
-             # Sort the board by Hex
-            state = tuple(
-                sorted(state, key=lambda hex: (hex[0].coordinates)))
+            # Sort the board by Hex
+            new_board.sort(key=lambda hex: hex[0].coordinates)
+            new_board = tuple(new_board)
+            # state = tuple(
+            #     sorted(state, key=lambda hex: (hex[0].coordinates)))
         
+        new_state.board = new_board
+        new_state.update_turn(self.turn)
 
-        self.update_turn(self.turn)
-        return state
+        return new_state
 
 
     def update_turn(self, current_player):
@@ -128,12 +138,12 @@ class Board:
         # game history, and returns the full list of moves that
         # are legal plays for the current player.
 
-        state = state_history[-1]
+        board = state_history[-1]
 
 
         # Create a dictionary for searching purposes
         board_dict = {}
-        for hex in state:
+        for hex in board:
             board_dict[hex[0].coordinates] = hex[1]
 
         
@@ -141,7 +151,7 @@ class Board:
 
         # Loop through all Hexes in the board state and finds all the current
         # player's pieces, and gets all their possible actions
-        for hex in state:
+        for hex in board:
             if hex[1] == self.turn:
                 # If a piece is in position to exit
                 if hex[0].coordinates in helper.get_finish(self.turn):
@@ -150,11 +160,6 @@ class Board:
                 # Get all 6 adjacent hexes of the current hex
                 current_hex_adjacents = mcts_helper.get_adjacent(hex[0].coordinates)
                 for adj in current_hex_adjacents:
-                    print("adjacent is of type")
-                    # print(board_dict[adj])
-                    print(adj)
-                    print(board_dict[adj])
-
                     # Check if MOVE action is possible for all adj hexes, append if yes
                     if board_dict[adj] == "empty":
                         all_actions.append(("MOVE", (hex[0].coordinates, adj)))

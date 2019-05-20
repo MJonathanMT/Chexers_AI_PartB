@@ -5,7 +5,7 @@ import unittest
 # from daboiz import mcts_helper
 from daboiz import mcts_helper
 from daboiz.hex import Hex
-from daboiz.board import Board
+from daboiz.game_state import GameState
 
 
 # print(sys.path)
