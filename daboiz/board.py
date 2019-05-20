@@ -1,6 +1,11 @@
 # Local imports
 from daboiz import mcts_helper
 from daboiz import  helper
+from daboiz.hex import Hex
+from daboiz.winstate import WinState
+
+# Python imports
+import copy
 
 
 class Board:
@@ -8,11 +13,13 @@ class Board:
     Board class
     """
 
-    num_players = 3
-
-    def __init__(self, start):
+    def __init__(self, start, player, pieces_exited):
+        # ((Hex, "type"), (Hex, "type"),...)
         self.state = start
-        self.turn = "red"
+        # "red"/"green"/"blue"
+        self.turn = player
+        # (1, 2, 3) in order (r, g, b)
+        self.pieces_exited = pieces_exited
 
     def starting_state(self):
         # Returns a representation of the starting state of the game.
@@ -27,10 +34,94 @@ class Board:
         # Returns the new game state.
         action_type = action[0]
         if action_type == "PASS":
-            return prev_state
+            state =  prev_state
         else:
-            # Pass the work to a helper function
-            return mcts_helper.update_board(prev_state, action, self.turn)
+            state = ()
+            if (action_type == "EXIT"):
+                # Loop through all the hexes to look for hexes interacted
+                i = 0
+                while (i < len(prev_state)):
+                    current_hex = Hex(action[1][0], action[1][1])
+
+                    # Once we find the hex coordinates that the piece exited FROM
+                    if (prev_state[i][0] == current_hex):
+                        # Create a new (Hex, "updated type") and put in the state tuple
+                        exit_hex = (prev_state[i][0], "empty")
+                        state += (exit_hex,)
+
+                    # Just append the other uninteracted hexes into state
+                    else:
+                        state += (prev_state[i],)
+                    i += 1
+                updated_pieces_exited = []
+                if self.turn == "red":
+                    updated_pieces_exited.append(self.pieces_exited[0] + 1)
+                    updated_pieces_exited.append(self.pieces_exited[1])
+                    updated_pieces_exited.append(self.pieces_exited[2])
+                elif self.turn == "green":
+                    updated_pieces_exited.append(self.pieces_exited[0])
+                    updated_pieces_exited.append(self.pieces_exited[1] + 1)
+                    updated_pieces_exited.append(self.pieces_exited[2])  
+                elif self.turn == "blue":
+                    updated_pieces_exited.append(self.pieces_exited[0])
+                    updated_pieces_exited.append(self.pieces_exited[1])
+                    updated_pieces_exited.append(self.pieces_exited[2] + 1)
+
+                self.pieces_exited = tuple(updated_pieces_exited)           
+
+            # When action is JUMP or MOVE
+            else:
+                before_hex = Hex(action[1][0][0], action[1][0][1])
+                next_hex = Hex(action[1][1][0], action[1][1][1])
+
+                # Loop through all the hexes to look for hexes interacted
+                i = 0
+                while (i < len(prev_state)):
+
+                    # If the action was a JUMP, we need to change the piece that was jumped over to the colour
+                    # of the piece that jumped (it got EATEN!)
+                    if (action_type == "JUMP"):
+                        eaten_hex_coordinates = helper.find_eaten(
+                            before_hex.coordinates, next_hex.coordinates)
+                        eaten_hex = Hex(
+                            eaten_hex_coordinates[0], eaten_hex_coordinates[1])
+                        if (prev_state[i][0] == eaten_hex):
+                            updated_eaten_hex = (prev_state[i][0], self.turn)
+                            state += (updated_eaten_hex,)
+                            i += 1
+                            continue
+
+                    # Once we find the hex coordinates that the piece acted FROM
+                    if (prev_state[i][0] == before_hex):
+                        # Create a new (Hex, "updated type") and put in the state tuple
+                        updated_before_hex = (prev_state[i][0], "empty")
+                        state += (updated_before_hex,)
+                    # Once we find the hex coordinates that the piece acted TO
+                    elif (prev_state[i][0] == next_hex):
+                        # Create a new (Hex, "updated type") and put in the state tuple
+                        updated_next_hex = (prev_state[i][0], self.turn)
+                        state += (updated_next_hex,)
+                    # Just append the other uninteracted hexes into state
+                    else:
+                        state += (prev_state[i],)
+                    i += 1
+
+             # Sort the board by Hex
+            state = tuple(
+                sorted(state, key=lambda hex: (hex[0].coordinates)))
+        
+
+        self.update_turn(self.turn)
+        return state
+
+
+    def update_turn(self, current_player):
+        if current_player == "red":
+            self.turn = "green"
+        elif current_player == "green":
+            self.turn = "blue"
+        elif current_player == "blue":
+            self.turn = "red"
 
     def legal_actions(self, state_history):
         # Takes a sequence of game states representing the full
@@ -38,19 +129,18 @@ class Board:
         # are legal plays for the current player.
 
         state = state_history[-1]
-        print("state is ")
-        print(state)
+
 
         # Create a dictionary for searching purposes
         board_dict = {}
         for hex in state:
             board_dict[hex[0].coordinates] = hex[1]
-            # print(hex)
+
         
         all_actions = []
 
         # Loop through all Hexes in the board state and finds all the current
-        # player's pieces,  and gets all their possible actions
+        # player's pieces, and gets all their possible actions
         for hex in state:
             if hex[1] == self.turn:
                 # If a piece is in position to exit
@@ -76,9 +166,19 @@ class Board:
         
         return all_actions
 
-    def winner(self, state_history):
+    def winner(self):
         # Takes a sequence of game states representing the full
         # game history.  If the game is now won, return the player
         # number.  If the game is still ongoing, return zero.  If
         # the game is tied, return a different distinct value, e.g. -1.
-        pass
+        for colour_exited in self.pieces_exited:
+            if colour_exited >= 4:
+                if self.pieces_exited.index(colour_exited) == 0:
+                    return WinState.RED
+                elif self.pieces_exited.index(colour_exited) == 1:
+                    return WinState.GREEN
+                elif self.pieces_exited.index(colour_exited) == 2:
+                    return WinState.BLUE
+        return WinState.ONGOING
+
+
