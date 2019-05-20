@@ -141,16 +141,15 @@ class GameState:
 
         # Create a dictionary for searching purposes
         board_dict = {}
-        # i = 0
+        pieces_left = 0
         for hex in board:
+            if hex[1] == self.turn:
+                pieces_left += 1
             board_dict[hex[0].coordinates] = hex[1]
-            # print("Coordinate is")
-            # print(hex[0].coordinates)
-            # print("hex type is")
-            # print(hex[1])
-            # i += 1
-            # print(i)
+
         all_actions = []
+        if not pieces_left:
+            all_actions.append(("PASS", None))
 
         # Loop through all Hexes in the board state and finds all the current
         # player's pieces, and gets all their possible actions
@@ -177,8 +176,7 @@ class GameState:
                             if board_dict[hex_landed] == "empty":
                                 all_actions.append(
                                     ("JUMP", (hex[0].coordinates, hex_landed)))
-        # print("legal actions are")
-        # print(all_actions)
+
         return all_actions
 
     def winner(self):
