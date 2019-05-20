@@ -1,6 +1,6 @@
 import helper
 import mcts_helper
-from board import Board
+from board import GameState
 
 
 class Player:
@@ -141,4 +141,4 @@ class Player:
         self.goals = helper.get_finish(colour)
         self.pieces_exited = 0
 
-        self.game_state = Board()
+        self.game_state = GameState()
