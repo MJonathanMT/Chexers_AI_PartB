@@ -186,4 +186,20 @@ class GameState:
                     return WinState.BLUE
         return WinState.ONGOING
 
+    def get_reward(self):
+        player_index = 0
+        if self.turn == "red":
+            player_index = 0
+        elif self.turn == "green":
+            player_index = 1
+        elif self.turn == "blue":
+            player_index = 2
+
+        for colour_exited in self.pieces_exited:
+            if colour_exited >= 4:
+                if self.pieces_exited.index(colour_exited) == player_index:
+                    return 1
+                else:
+                    return 0
+
 
