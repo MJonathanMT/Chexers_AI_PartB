@@ -28,7 +28,10 @@ class Player:
         empty_dict = {}
         self.adj_dict = init.get_adjacent((0, 0), empty_dict)
 
+        # Getting all enemies of current player
         self.enemies = init.get_enemies(self)
+
+        # Getting corners and edges of the board
         self.corners = init.get_corners()
 
     def action(self):
@@ -51,35 +54,34 @@ class Player:
             dist_dict = action.distance_fill(self, dist_dict, goal, distance)
 
         # TODO: Decide what action to take.
-        # attempt to protect pieces that are in dangered
+        # check all the pieces that are under attack
         in_dangered = action.check_trouble(self)
-        print(in_dangered)
 
-        # try to attack/eat enemy first
-
+        # If there are pieces being attack, attempt to defend these pieces
         defensive_move = action.defensive_moves(self, in_dangered)
         final_move = ()
+
+        # If there is a defensive_move do it, if not try attacking other pieces
         if defensive_move:
             final_move = defensive_move
-            print("defensive move is "+ str(defensive_move))
         else:
             for piece in self.pieces:
                 final_move = action.attack_move(self, piece)
                 if final_move:
                     break
-            print("attacking move is "+str(final_move))
+
+        # If there are no defensive or offensive actions, reset back to PASS
         if not final_move:
             final_move = ("PASS", None)
+
         # If no more pieces, end turn:
         if not self.pieces:
             return final_move
 
-
-
         # Try exit move if possible
         for piece in self.pieces:
-
             total_count = len(self.pieces) + self.pieces_exited
+            # Don't try to exit if there are less than 4 total_count
             if piece in self.goals and total_count >= 4:
                 final_action = ("EXIT", piece)
                 return final_action
@@ -87,24 +89,25 @@ class Player:
         if final_move[0] == "PASS" :
             # Get the best move possible for each piece
             best_moves = action.get_moves(self, dist_dict)
-            print("ALL BEST MOVES = "+str(best_moves))
 
             # Get the best jump possible for each piece
             best_jumps = action.get_jumps(self, dist_dict)
-            print("ALL BEST JUMPS = "+str(best_jumps))
 
             # Get the best action possible for each piece
             final_moves = action.final_movements(dist_dict, best_moves, best_jumps)
-            print("ALL FINAL MOVES = "+str(final_moves))
             if len(self.pieces) > 6:
                 # Choose the best piece to move
+                # Since we have a lot of pieces,
+                # move front pieces as its more offensive action
                 final_move = action.get_piece(dist_dict, final_moves, "front")
             else:
+                # Moving the back pieces helps our pieces to regroup
+                # and curl back into a defensive position
                 final_move = action.get_piece(dist_dict, final_moves, "back")
-
-            print("final move is "+str(final_move))
             if not final_move:
                 final_move = ("PASS", None)
+
+        # returning the final_action
         if final_move[0] == "PASS":
             final_action = ("PASS", None)
         elif final_move[2] == 'move':

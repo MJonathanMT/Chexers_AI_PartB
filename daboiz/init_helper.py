@@ -98,13 +98,25 @@ def get_adjacent(pos, adj_dict):
 
 
 def get_enemies(self):
+    """
+    Returns a list of all the enemies of the current player obejct
+    :param self: Player object
+    :return: A list of all the enemies of the current player
+    """
     enemies = []
     for piece in self.board_dict:
         if piece not in self.pieces:
             enemies.append(piece)
     return enemies
 
+
 def get_corners():
+    """
+    Function to get the corners of the board
+    :return: A 2d list of all the corners and edges of the board
+    """
+    # Index 0 is the vertex or sharp corners of the board
+    # Index 1 is the edges of the board
     corners = [[], []]
     corners[0] = [(0, -3), (3, -3), (3, 0), (0, 3), (-3, 3), (-3, 0)]
     corners[1] =[(1, -3), (2, -3), (3, -2), (3, -1), (2, 1), (1, 2),
