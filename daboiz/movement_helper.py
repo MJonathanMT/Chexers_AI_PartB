@@ -53,14 +53,15 @@ def check_trouble(self):
     for piece in self.pieces:
         for enemy in self.enemies:
             if enemy in self.adj_dict[piece]:
-                # get the q,r difference between our piece and enemy piece
-                q_diff = enemy[0] - piece[0]
-                r_diff = enemy[1] - piece[1]
-                protection = (piece[0] - q_diff, piece[1] - r_diff)
-                if (protection not in self.board_dict
-                    and piece not in in_dangered
-                    and protection in self.adj_dict[piece]):
-                        in_dangered.append(piece)
+                # # get the q,r difference between our piece and enemy piece
+                # q_diff = enemy[0] - piece[0]
+                # r_diff = enemy[1] - piece[1]
+                # protection = (piece[0] - q_diff, piece[1] - r_diff)
+                # if (protection not in self.board_dict
+                #     and piece not in in_dangered
+                #     and protection in self.adj_dict[piece]):
+                #         in_dangered.append(piece)
+                in_dangered.append(piece)
     return in_dangered
 
 def defensive_moves(self, in_dangered):
@@ -73,6 +74,7 @@ def defensive_moves(self, in_dangered):
     method = 1
     while method != 4:
         action = ()
+        protected = False
         for piece in in_dangered:
             # check if any of the movements are available
             # Methods go in decreasing priority
@@ -81,17 +83,28 @@ def defensive_moves(self, in_dangered):
             # More explanation in report
             if method == 1:
                 action = try_attack(self, piece)
-                # print("attempt to attack " + str(action) )
+                print("attempt to attack " + str(action) )
             elif method == 2:
-                action = try_protect(self, piece)
-                # print("attempt to defend " + str(action) )
+                for enemy in self.enemies:
+                    if enemy in self.adj_dict[piece]:
+                        q_diff = enemy[0] - piece[0]
+                        r_diff = enemy[1] - piece[1]
+                        protection = (piece[0] - q_diff, piece[1] - r_diff)
+                        if protection not in self.board_dict:
+                            action = try_protect(self, piece)
+                            protected = False
+                        else:
+                            protected = True
+                print("attempt to defend " + str(action) )
             elif method == 3:
                 action = move_away(self, piece)
-                # print("attempt to walk away " + str(action) )
+                print("attempt to walk away " + str(action) )
 
-            if action:
-                # print("returning action = "+ str(action))
+            if action or protected:
+                print("returning action = "+ str(action))
                 return action
+        if protected:
+            return action
         method += 1
     return action
 
@@ -184,7 +197,26 @@ def is_protecting(self, in_danger, piece):
         return True
     return False
 
-
+def attack_move(self, piece):
+    """
+    Function to check if the piece that is under attack could attack back
+    :param self: Player object
+    :param piece: Piece that is under attack
+    :return: If exist, moves to capture the opposing piece
+    """
+    movement = []
+    for enemy in self.enemies:
+        if enemy in self.adj_dict[piece]:
+            q_diff = enemy[0] - piece[0]
+            r_diff = enemy[1] - piece[1]
+            attack_able = (enemy[0] + q_diff, enemy[1] + r_diff)
+            if (attack_able in self.adj_dict[enemy]
+                    and attack_able not in self.board_dict):
+                movement.append(piece)
+                movement.append(attack_able)
+                movement.append("jump")
+                return movement
+    return False
 
 
 def get_moves(self, dist_dict):
@@ -193,8 +225,8 @@ def get_moves(self, dist_dict):
         movement = []
         shortest_dist = 0
         best_move = ()
-        safety = True
         for next_move in self.adj_dict[piece]:
+            safety = True
             # Skips move if there is another piece in front of it or
             # if there is a blocked hex
             if next_move in self.board_dict:
@@ -211,6 +243,7 @@ def get_moves(self, dist_dict):
                     if protection == piece or protection not in self.pieces:
                         safety = False
             if not safety:
+                not_safe_move = next_move
                 continue
             # the best move is where the distance of the next
             # location is the closest to the goal
@@ -220,7 +253,8 @@ def get_moves(self, dist_dict):
             elif dist_dict[next_move] <= shortest_dist:
                 shortest_dist = dist_dict[next_move]
                 best_move = next_move
-
+        if not best_move:
+            best_move = not_safe_move
         # Each value of the position contains the current position
         # and next position
         movement.append(piece)
@@ -343,7 +377,7 @@ def final_movements(dist_dict, best_moves, best_jumps):
     return final_moves
 
 
-def get_piece(dist_dict, final_moves):
+def get_piece(dist_dict, final_moves, position):
     """
     This function choose the best piece to move amongst the piece on the board
     :param dist_dict: Dictionary containing the distance to the nearest goal
@@ -367,15 +401,18 @@ def get_piece(dist_dict, final_moves):
         elif dist == 0:
             dist = dist_dict[piece]
             final_move = final_moves[piece]
-
-        # Choose the piece that is further away from the goal
-        elif dist_dict[piece] > dist:
-            dist = dist_dict[piece]
-            final_move = final_moves[piece]
-
+        if position == "back":
+            # Choose the piece that is further away from the goal
+            if dist_dict[piece] > dist:
+                dist = dist_dict[piece]
+                final_move = final_moves[piece]
+        elif position == "front":
+            if dist_dict[piece] < dist:
+                dist = dist_dict[piece]
+                final_move = final_moves[piece]
         # If the same distance away from the goal,
         # choose piece with the jump action
-        elif dist_dict[piece] == dist:
+        if dist_dict[piece] == dist:
             if final_moves[piece][2] == 'jump':
                 final_move = final_moves[piece]
 

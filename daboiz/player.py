@@ -55,34 +55,52 @@ class Player:
         print(in_dangered)
 
         # try to attack/eat enemy first
+
         defensive_move = action.defensive_moves(self, in_dangered)
+        final_move = ()
         if defensive_move:
             final_move = defensive_move
             print("defensive move is "+ str(defensive_move))
         else:
+            for piece in self.pieces:
+                final_move = action.attack_move(self, piece)
+                if final_move:
+                    break
+            print("attacking move is "+str(final_move))
+        if not final_move:
             final_move = ("PASS", None)
         # If no more pieces, end turn:
         if not self.pieces:
             return final_move
 
+
+
         # Try exit move if possible
         for piece in self.pieces:
-            if piece in self.goals:
+
+            total_count = len(self.pieces) + self.pieces_exited
+            if piece in self.goals and total_count >= 4:
                 final_action = ("EXIT", piece)
                 return final_action
 
         if final_move[0] == "PASS" :
             # Get the best move possible for each piece
             best_moves = action.get_moves(self, dist_dict)
+            print("ALL BEST MOVES = "+str(best_moves))
 
             # Get the best jump possible for each piece
             best_jumps = action.get_jumps(self, dist_dict)
+            print("ALL BEST JUMPS = "+str(best_jumps))
 
             # Get the best action possible for each piece
             final_moves = action.final_movements(dist_dict, best_moves, best_jumps)
+            print("ALL FINAL MOVES = "+str(final_moves))
+            if len(self.pieces) > 5:
+                # Choose the best piece to move
+                final_move = action.get_piece(dist_dict, final_moves, "front")
+            else:
+                final_move = action.get_piece(dist_dict, final_moves, "back")
 
-            # Choose the best piece to move
-            final_move = action.get_piece(dist_dict, final_moves)
             print("final move is "+str(final_move))
             if not final_move:
                 final_move = ("PASS", None)
