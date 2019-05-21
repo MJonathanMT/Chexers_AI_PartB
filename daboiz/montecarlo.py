@@ -1,6 +1,3 @@
-# Local imports
-from daboiz import helper
-
 import math
 import random
 import time
@@ -10,7 +7,7 @@ def random_policy(state):
     while not state.is_terminal():
         try:
             # action = random.choice(state.legal_actions())
-            action = best_action(state.legal_actions())
+            action = state.best_action()
         except IndexError:
             raise Exception(
                 "Non-terminal state has no possible actions: " + str(state))

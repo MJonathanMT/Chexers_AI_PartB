@@ -3,7 +3,6 @@ from operator import itemgetter
 
 # Local imports
 from daboiz.hex import Hex
-from daboiz import helper
 
 # Tested
 

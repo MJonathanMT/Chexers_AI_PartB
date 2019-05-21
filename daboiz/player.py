@@ -1,6 +1,10 @@
+# Local imports
 import daboiz.movement_helper as action
 import daboiz.update_helper as update
 import daboiz.init_helper as init
+from daboiz.game_state import GameState
+from daboiz import mcts_helper
+from daboiz.montecarlo import mcts
 
 
 class Player:
@@ -32,11 +36,31 @@ class Player:
 
         self.enemies = init.get_enemies(self)
 
+    def action(self):
+        """
+        This method is called at the beginning of each of your turns to request
+        a choice of action from your program.
+
+        Based on the current state of the game, your player should select and
+        return an allowed action to play on this turn. If there are no allowed
+        actions, your player must return a pass instead. The action (or pass)
+        must be represented based on the above instructions for representing
+        actions.
+        """
+
+        if not self.pieces:
+            return ("PASS", None)
+        initial_state = GameState(mcts_helper.convert_board(
+            self.board_dict), self.colour, self.all_pieces_exited, self.pieces,
+            self.adj_dict, self.enemies, self.goals, self.board_dict, self.pieces_exited)
+        monte_carlo = mcts(time_limit=1000)
+        action = monte_carlo.search(initial_state=initial_state)
+        return action
+
     # def action(self):
     #     """
     #     This method is called at the beginning of each of your turns to request
     #     a choice of action from your program.
-
     #     Based on the current state of the game, your player should select and
     #     return an allowed action to play on this turn. If there are no allowed
     #     actions, your player must return a pass instead. The action (or pass)
@@ -44,100 +68,75 @@ class Player:
     #     actions.
     #     """
 
-    #     initial_state = GameState(mcts_helper.convert_board(
-    #         self.board_dict), self.colour, self.all_pieces_exited)
-    #     monte_carlo = mcts(time_limit=1000)
-    #     action = monte_carlo.search(initial_state=initial_state)
+    #     # Fill distance dictionary with the least distance from each goal
+    #     dist_dict = action.create_dist_dict()
+    #     for goal in self.goals:
+    #         if goal in self.enemies:
+    #             continue
+    #         distance = 0
+    #         dist_dict = action.distance_fill(self, dist_dict, goal, distance)
 
-    #     return action
+    #     # TODO: Decide what action to take.
+    #     # attempt to protect pieces that are in dangered
+    #     in_dangered = action.check_trouble(self)
+    #     print(in_dangered)
 
-    def action(self):
-        """
-        This method is called at the beginning of each of your turns to request
-        a choice of action from your program.
-        Based on the current state of the game, your player should select and
-        return an allowed action to play on this turn. If there are no allowed
-        actions, your player must return a pass instead. The action (or pass)
-        must be represented based on the above instructions for representing
-        actions.
-        """
-        if not self.pieces:
-            return ("PASS", None)
+    #     # try to attack/eat enemy first
 
-        # Update our own dist_dict every time it's our turn
-        for goal in self.goals:
-            self.dist_dict = action.distance_fill(
-                self, self.dist_dict, goal, 0)
+    #     defensive_move = action.defensive_moves(self, in_dangered)
+    #     final_move = ()
+    #     if defensive_move:
+    #         final_move = defensive_move
+    #         print("defensive move is " + str(defensive_move))
+    #     else:
+    #         for piece in self.pieces:
+    #             final_move = action.attack_move(self, piece)
+    #             if final_move:
+    #                 break
+    #         print("attacking move is "+str(final_move))
+    #     if not final_move:
+    #         final_move = ("PASS", None)
+    #     # If no more pieces, end turn:
+    #     if not self.pieces:
+    #         return final_move
 
-        # Fill distance dictionary with the least distance from each goal
-        dist_dict = action.create_dist_dict()
-        for goal in self.goals:
-            if goal in self.enemies:
-                continue
-            distance = 0
-            dist_dict = action.distance_fill(self, dist_dict, goal, distance)
+    #     # Try exit move if possible
+    #     for piece in self.pieces:
 
-        # TODO: Decide what action to take.
-        # attempt to protect pieces that are in dangered
-        in_dangered = action.check_trouble(self)
-        print(in_dangered)
+    #         total_count = len(self.pieces) + self.pieces_exited
+    #         if piece in self.goals and total_count >= 4:
+    #             final_action = ("EXIT", piece)
+    #             return final_action
 
-        # try to attack/eat enemy first
+    #     if final_move[0] == "PASS":
+    #         # Get the best move possible for each piece
+    #         best_moves = action.get_moves(self, dist_dict)
+    #         print("ALL BEST MOVES = "+str(best_moves))
 
-        defensive_move = action.defensive_moves(self, in_dangered)
-        final_move = ()
-        if defensive_move:
-            final_move = defensive_move
-            print("defensive move is " + str(defensive_move))
-        else:
-            for piece in self.pieces:
-                final_move = action.attack_move(self, piece)
-                if final_move:
-                    break
-            print("attacking move is "+str(final_move))
-        if not final_move:
-            final_move = ("PASS", None)
-        # If no more pieces, end turn:
-        if not self.pieces:
-            return final_move
+    #         # Get the best jump possible for each piece
+    #         best_jumps = action.get_jumps(self, dist_dict)
+    #         print("ALL BEST JUMPS = "+str(best_jumps))
 
-        # Try exit move if possible
-        for piece in self.pieces:
+    #         # Get the best action possible for each piece
+    #         final_moves = action.final_movements(
+    #             dist_dict, best_moves, best_jumps)
+    #         print("ALL FINAL MOVES = "+str(final_moves))
+    #         if len(self.pieces) > 5:
+    #             # Choose the best piece to move
+    #             final_move = action.get_piece(dist_dict, final_moves, "front")
+    #         else:
+    #             final_move = action.get_piece(dist_dict, final_moves, "back")
 
-            total_count = len(self.pieces) + self.pieces_exited
-            if piece in self.goals and total_count >= 4:
-                final_action = ("EXIT", piece)
-                return final_action
-
-        if final_move[0] == "PASS":
-            # Get the best move possible for each piece
-            best_moves = action.get_moves(self, dist_dict)
-            print("ALL BEST MOVES = "+str(best_moves))
-
-            # Get the best jump possible for each piece
-            best_jumps = action.get_jumps(self, dist_dict)
-            print("ALL BEST JUMPS = "+str(best_jumps))
-
-            # Get the best action possible for each piece
-            final_moves = action.final_movements(
-                dist_dict, best_moves, best_jumps)
-            print("ALL FINAL MOVES = "+str(final_moves))
-            if len(self.pieces) > 5:
-                # Choose the best piece to move
-                final_move = action.get_piece(dist_dict, final_moves, "front")
-            else:
-                final_move = action.get_piece(dist_dict, final_moves, "back")
-
-            print("final move is "+str(final_move))
-            if not final_move:
-                final_move = ("PASS", None)
-        if final_move[0] == "PASS":
-            final_action = ("PASS", None)
-        elif final_move[2] == 'move':
-            final_action = ("MOVE", (final_move[0], final_move[1]))
-        else:
-            final_action = ("JUMP", (final_move[0], final_move[1]))
-        return final_action
+    #         print("final move is "+str(final_move))
+    #         if not final_move:
+    #             final_move = ("PASS", None)
+    #     if final_move[0] == "PASS":
+    #         final_action = ("PASS", None)
+    #     elif final_move[2] == 'move':
+    #         final_action = ("MOVE", (final_move[0], final_move[1]))
+    #     else:
+    #         final_action = ("JUMP", (final_move[0], final_move[1]))
+    #     return final_action
 
     def update(self, colour, action):
         """
@@ -161,14 +160,21 @@ class Player:
             if colour == self.colour:
                 self.pieces.remove(action[1][0])
                 self.pieces.append(action[1][1])
+            else:
+                self.enemies.remove(action[1][0])
+                self.enemies.append(action[1][1])
 
         elif action[0] == "JUMP":
+            # TODO
 
             del self.board_dict[action[1][0]]
             self.board_dict[action[1][1]] = colour
             if colour == self.colour:
                 self.pieces.remove(action[1][0])
                 self.pieces.append(action[1][1])
+            else:
+                self.enemies.remove(action[1][0])
+                self.enemies.append(action[1][1])
 
             # Changing the piece that was 'eaten'(jumped over) to the
             # colour of the piece making the jump
@@ -181,28 +187,19 @@ class Player:
                 self.board_dict[eaten] = colour
                 if self.colour == colour:
                     self.pieces.append(eaten)
+                    self.enemies.remove(eaten)
                 elif self.colour == prev_colour:
                     self.pieces.remove(eaten)
+                    self.enemies.append(eaten)
 
         elif action[0] == "EXIT":
+            # TODO
             del self.board_dict[action[1]]
             if self.colour == colour:
                 self.pieces.remove(action[1])
-
-                all_pieces_exited = []
-                if self.colour == "red":
-                    all_pieces_exited.append(self.all_pieces_exited[0] + 1)
-                    all_pieces_exited.append(self.all_pieces_exited[1])
-                    all_pieces_exited.append(self.all_pieces_exited[2])
-                elif self.colour == "green":
-                    all_pieces_exited.append(self.all_pieces_exited[0])
-                    all_pieces_exited.append(self.all_pieces_exited[1] + 1)
-                    all_pieces_exited.append(self.all_pieces_exited[2])
-                elif self.colour == "blue":
-                    all_pieces_exited.append(self.all_pieces_exited[0])
-                    all_pieces_exited.append(self.all_pieces_exited[1])
-                    all_pieces_exited.append(self.all_pieces_exited[2] + 1)
-                self.all_pieces_exited = tuple(all_pieces_exited)
+                self.pieces_exited += 1
+            else:
+                self.enemies.remove(action[1])
 
 
 def print_board(board_dict, message="Testing Board Condition", debug=False):

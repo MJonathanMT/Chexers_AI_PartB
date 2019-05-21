@@ -9,6 +9,7 @@ def create_dist_dict():
         dist_dict[qr] = '###'
     return dist_dict
 
+
 def distance_fill(self, dist_dict, pos, dist):
     dist += 1
     # These '###' represents an unvisited hex
@@ -48,6 +49,7 @@ def distance_fill(self, dist_dict, pos, dist):
             distance_fill(self, dist_dict, next_jump, dist)
     return dist_dict
 
+
 def check_trouble(self):
     in_dangered = []
     for piece in self.pieces:
@@ -63,6 +65,7 @@ def check_trouble(self):
                 #         in_dangered.append(piece)
                 in_dangered.append(piece)
     return in_dangered
+
 
 def defensive_moves(self, in_dangered):
     """
@@ -83,7 +86,7 @@ def defensive_moves(self, in_dangered):
             # More explanation in report
             if method == 1:
                 action = try_attack(self, piece)
-                print("attempt to attack " + str(action) )
+                print("attempt to attack " + str(action))
             elif method == 2:
                 for enemy in self.enemies:
                     if enemy in self.adj_dict[piece]:
@@ -95,18 +98,19 @@ def defensive_moves(self, in_dangered):
                             protected = False
                         else:
                             protected = True
-                print("attempt to defend " + str(action) )
+                print("attempt to defend " + str(action))
             elif method == 3:
                 action = move_away(self, piece)
-                print("attempt to walk away " + str(action) )
+                print("attempt to walk away " + str(action))
 
             if action or protected:
-                print("returning action = "+ str(action))
+                print("returning action = " + str(action))
                 return action
         if protected:
             return action
         method += 1
     return action
+
 
 def try_attack(self, piece):
     """
@@ -129,6 +133,7 @@ def try_attack(self, piece):
                 return movement
     return False
 
+
 def try_protect(self, piece):
     """
     Function to a another piece behind the current piece that is in danger
@@ -145,7 +150,7 @@ def try_protect(self, piece):
                 r_diff = piece[1] - enemy[1]
                 protection = (piece[0] + q_diff, piece[1] + r_diff)
                 if (protection in self.board_dict
-                    and protection in self.adj_dict[piece]):
+                        and protection in self.adj_dict[piece]):
                     continue
                 for other in self.pieces:
                     if other == protection or other == piece:
@@ -157,6 +162,7 @@ def try_protect(self, piece):
                         return movement
     return movement
 
+
 def move_away(self, piece):
     """
     Function to make the piece in danger run away
@@ -167,8 +173,8 @@ def move_away(self, piece):
     movement = []
     for next_move in self.adj_dict[piece]:
         if (next_move in self.board_dict
-            or bool(set(self.adj_dict[next_move]) & set(self.enemies))):
-                continue
+                or bool(set(self.adj_dict[next_move]) & set(self.enemies))):
+            continue
         else:
             movement.append(piece)
             movement.append(next_move)
@@ -196,6 +202,7 @@ def is_protecting(self, in_danger, piece):
     if possible_enemy in self.enemies:
         return True
     return False
+
 
 def attack_move(self, piece):
     """
@@ -225,6 +232,7 @@ def get_moves(self, dist_dict):
         movement = []
         shortest_dist = 0
         best_move = ()
+        not_safe_move = ()
         for next_move in self.adj_dict[piece]:
             safety = True
             # Skips move if there is another piece in front of it or
@@ -298,7 +306,8 @@ def get_jumps(self, dist_dict):
                         # check if the move there is safe
                         x_diff = enemy[0] - next_jump[0]
                         y_diff = enemy[1] - next_jump[1]
-                        protection = (next_jump[0] - x_diff, next_jump[1] - y_diff)
+                        protection = (
+                            next_jump[0] - x_diff, next_jump[1] - y_diff)
                         if protection == piece or protection not in self.pieces:
                             safety = False
             if not safety:
@@ -324,7 +333,7 @@ def get_jumps(self, dist_dict):
         # (Worsen the piece condition) remove the best jump instead
         # and its not a kill move
         if (best_jump != () and dist_dict[piece] <= dist_dict[best_jump]
-            and not final_kill):
+                and not final_kill):
             best_jump = ()
 
         # Each value of the position contains the current position
@@ -417,4 +426,3 @@ def get_piece(dist_dict, final_moves, position):
                 final_move = final_moves[piece]
 
     return final_move
-

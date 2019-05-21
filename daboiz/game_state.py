@@ -1,8 +1,10 @@
 # Local imports
 from daboiz import mcts_helper
-from daboiz import helper
+from daboiz import update_helper as update
+from daboiz import init_helper as init
 from daboiz.hex import Hex
 from daboiz.winstate import WinState
+from daboiz import movement_helper as action
 
 # Python imports
 import copy
@@ -14,7 +16,7 @@ class GameState:
     Board class
     """
 
-    def __init__(self, start, player, pieces_exited, dist_dict, pieces, adj_dict):
+    def __init__(self, start, player, pieces_exited, pieces, adj_dict, enemies, goals, board_dict, own_pieces_exited):
         # ((Hex, "type"), (Hex, "type"),...)
         self.board = start
         # "red"/"green"/"blue"
@@ -22,11 +24,62 @@ class GameState:
         # (1, 2, 3) in order (r, g, b)
         self.pieces_exited = pieces_exited
 
+        self.own_pieces_exited = own_pieces_exited
+
         # Used for eval function/heuristics
-        # Dictionary to store all the distances of each colour piece to their closest goals
-        self.dist_dict = dist_dict
         self.pieces = pieces
         self.adj_dict = adj_dict
+        self.enemies = enemies
+        self.goals = goals
+        self.board_dict = board_dict
+
+    def update_player_data(self, colour, action):
+        if action[0] == "MOVE":
+            del self.board_dict[action[1][0]]
+            self.board_dict[action[1][1]] = colour
+            if colour == self.turn:
+                self.pieces.remove(action[1][0])
+                self.pieces.append(action[1][1])
+            else:
+                self.enemies.remove(action[1][0])
+                self.enemies.append(action[1][1])
+
+        elif action[0] == "JUMP":
+            # TODO
+
+            del self.board_dict[action[1][0]]
+            self.board_dict[action[1][1]] = colour
+            if colour == self.turn:
+                self.pieces.remove(action[1][0])
+                self.pieces.append(action[1][1])
+            else:
+                self.enemies.remove(action[1][0])
+                self.enemies.append(action[1][1])
+
+            # Changing the piece that was 'eaten'(jumped over) to the
+            # colour of the piece making the jump
+            eaten = update.find_eaten(action[1][0], action[1][1])
+            prev_colour = self.board_dict[eaten]
+
+            # If the 'eaten' piece is not the same colour as the
+            # piece making the jump, it officially gets eaten
+            if colour != prev_colour:
+                self.board_dict[eaten] = colour
+                if self.turn == colour:
+                    self.pieces.append(eaten)
+                    self.enemies.remove(eaten)
+                elif self.turn == prev_colour:
+                    self.pieces.remove(eaten)
+                    self.enemies.append(eaten)
+
+        elif action[0] == "EXIT":
+            # TODO
+            del self.board_dict[action[1]]
+            if self.turn == colour:
+                self.pieces.remove(action[1])
+                self.own_pieces_exited += 1
+            else:
+                self.enemies.remove(action[1])
 
     def next_state(self, action):
         # Takes the game state, and the action to be applied.
@@ -86,7 +139,7 @@ class GameState:
                     # If the action was a JUMP, we need to change the piece that was jumped over to the colour
                     # of the piece that jumped (it got EATEN!)
                     if (action[0] == "JUMP"):
-                        eaten_hex_coordinates = helper.find_eaten(
+                        eaten_hex_coordinates = update.find_eaten(
                             before_hex.coordinates, next_hex.coordinates)
                         eaten_hex = Hex(
                             eaten_hex_coordinates[0], eaten_hex_coordinates[1])
@@ -101,6 +154,7 @@ class GameState:
                     if (self.board[i][0] == before_hex):
                         # Create a new (Hex, "updated type") and put in the state tuple
                         updated_before_hex = (self.board[i][0], "empty")
+                        print(updated_before_hex)
                         new_board.append(updated_before_hex)
                         # state += (updated_before_hex,)
                     # Once we find the hex coordinates that the piece acted TO
@@ -124,6 +178,7 @@ class GameState:
 
         new_state.board = new_board
         new_state.update_turn(self.turn)
+        new_state.update_player_data(new_state.turn, action)
 
         return new_state
 
@@ -159,7 +214,7 @@ class GameState:
         for hex in board:
             if hex[1] == self.turn:
                 # If a piece is in position to exit
-                if hex[0].coordinates in helper.get_finish(self.turn):
+                if hex[0].coordinates in init.get_finish(self.turn):
                     all_actions.append(("EXIT", hex[0].coordinates))
 
                 # Get all 6 adjacent hexes of the current hex
@@ -226,63 +281,130 @@ class GameState:
                     return -3
         return 0
 
-    def best_action(self, legal_actions):
-        # Function to CHOOSE which action is the best from a list of ALL legal actions
+    # def best_action(self, legal_actions):
+    #     # Function to CHOOSE which action is the best from a list of ALL legal actions
 
-        # Prioritise the legal moves
-        all_exits = []
-        for action in legal_actions:
-            if (action[0] == "EXIT"):
-                all_exits.append(action)
-        if all_exits:
-            best_action = random.choice(all_exits)
+    #     # Prioritise the legal moves
+    #     all_exits = []
+    #     for action in legal_actions:
+    #         if (action[0] == "EXIT"):
+    #             all_exits.append(action)
+    #     if all_exits:
+    #         best_action = random.choice(all_exits)
 
-        # Create a dictionary for searching purposes
-        board_dict = {}
-        for hex in self.board:
-            board_dict[hex[0].coordinates] = hex[1]
+    #     # Create a dictionary for searching purposes
+    #     board_dict = {}
+    #     for hex in self.board:
+    #         board_dict[hex[0].coordinates] = hex[1]
 
-        # Get the best move possible for each piece
-        best_moves = helper.get_moves(self, self.dist_dict)
+    #     # Get the best move possible for each piece
+    #     best_moves = helper.get_moves(self, self.dist_dict)
 
-        # Get the best jump possible for each piece
-        best_jumps = helper.get_jumps(self, self.dist_dict)
+    #     # Get the best jump possible for each piece
+    #     best_jumps = helper.get_jumps(self, self.dist_dict)
 
-        # Get the best action possible for each piece
-        final_moves = helper.final_movements(
-            self.dist_dict, best_moves, best_jumps)
+    #     # Get the best action possible for each piece
+    #     final_moves = helper.final_movements(
+    #         self.dist_dict, best_moves, best_jumps)
 
-        # Choose the best piece to move
-        final_move = helper.get_piece(self.dist_dict, final_moves)
-        if final_move == ():
-            return action
+    #     # Choose the best piece to move
+    #     final_move = helper.get_piece(self.dist_dict, final_moves)
+    #     if final_move == ():
+    #         return action
+    #     elif final_move[2] == 'move':
+    #         action = ("MOVE", (str(final_move[0]), str(final_move[1])))
+    #     elif final_move[2] == 'jump':
+    #         action = ("JUMP", (str(final_move[0]), str(final_move[1])))
+    #     return action
+
+    #     # # Categorize all the legal moves into exits, jumps and moves
+    #     # all_exits = []
+    #     # all_jumps = []
+    #     # all_moves = []
+    #     # for action in legal_actions:
+    #     #     if (action[0] == "EXIT"):
+    #     #         all_exits.append(action)
+    #     #     elif (action[0] == "JUMP"):
+    #     #         all_jumps.append(action)
+    #     #     if (action[0] == "MOVE"):
+    #     #         all_moves.append(action)
+
+    #     # # Prioritise the legal moves
+    #     # # 1 - EXITS, 2 - JUMPS, 3 - MOVES
+    #     # if all_exits:
+    #     #     best_action = random.choice(all_exits)
+    #     # elif all_jumps:
+    #     #     best_action = random.choice(all_jumps)
+    #     # elif all_moves:
+    #     #     best_action = random.choice(all_moves)
+    #     # else:
+    #     #     best_action = ("PASS", None)
+
+    #     # return best_action
+
+    def best_action(self):
+        if not self.pieces:
+            return ("PASS", None)
+
+        # Fill distance dictionary with the least distance from each goal
+        dist_dict = action.create_dist_dict()
+        for goal in self.goals:
+            if goal in self.enemies:
+                continue
+            distance = 0
+            dist_dict = action.distance_fill(self, dist_dict, goal, distance)
+
+        # TODO: Decide what action to take.
+        # attempt to protect pieces that are in dangered
+        in_dangered = action.check_trouble(self)
+
+        # try to attack/eat enemy first
+
+        defensive_move = action.defensive_moves(self, in_dangered)
+        final_move = ()
+        if defensive_move:
+            final_move = defensive_move
+        else:
+            for piece in self.pieces:
+                final_move = action.attack_move(self, piece)
+                if final_move:
+                    break
+        if not final_move:
+            final_move = ("PASS", None)
+        # If no more pieces, end turn:
+        if not self.pieces:
+            return final_move
+
+        # Try exit move if possible
+        for piece in self.pieces:
+
+            total_count = len(self.pieces) + self.own_pieces_exited
+            if piece in self.goals and total_count >= 4:
+                final_action = ("EXIT", piece)
+                return final_action
+
+        if final_move[0] == "PASS":
+            # Get the best move possible for each piece
+            best_moves = action.get_moves(self, dist_dict)
+
+            # Get the best jump possible for each piece
+            best_jumps = action.get_jumps(self, dist_dict)
+
+            # Get the best action possible for each piece
+            final_moves = action.final_movements(
+                dist_dict, best_moves, best_jumps)
+            if len(self.pieces) > 5:
+                # Choose the best piece to move
+                final_move = action.get_piece(dist_dict, final_moves, "front")
+            else:
+                final_move = action.get_piece(dist_dict, final_moves, "back")
+
+            if not final_move:
+                final_move = ("PASS", None)
+        if final_move[0] == "PASS":
+            final_action = ("PASS", None)
         elif final_move[2] == 'move':
-            action = ("MOVE", (str(final_move[0]), str(final_move[1])))
-        elif final_move[2] == 'jump':
-            action = ("JUMP", (str(final_move[0]), str(final_move[1])))
-        return action
-
-        # # Categorize all the legal moves into exits, jumps and moves
-        # all_exits = []
-        # all_jumps = []
-        # all_moves = []
-        # for action in legal_actions:
-        #     if (action[0] == "EXIT"):
-        #         all_exits.append(action)
-        #     elif (action[0] == "JUMP"):
-        #         all_jumps.append(action)
-        #     if (action[0] == "MOVE"):
-        #         all_moves.append(action)
-
-        # # Prioritise the legal moves
-        # # 1 - EXITS, 2 - JUMPS, 3 - MOVES
-        # if all_exits:
-        #     best_action = random.choice(all_exits)
-        # elif all_jumps:
-        #     best_action = random.choice(all_jumps)
-        # elif all_moves:
-        #     best_action = random.choice(all_moves)
-        # else:
-        #     best_action = ("PASS", None)
-
-        # return best_action
+            final_action = ("MOVE", (final_move[0], final_move[1]))
+        else:
+            final_action = ("JUMP", (final_move[0], final_move[1]))
+        return final_action
