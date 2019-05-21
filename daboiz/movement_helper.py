@@ -9,7 +9,18 @@ def create_dist_dict():
         dist_dict[qr] = '###'
     return dist_dict
 
+
 def distance_fill(self, dist_dict, pos, dist):
+    """
+    This recursive function calculates the distance of each hex coordinate
+    from the goal 'pos' (depending on the colour) and stores it in the dictionary
+    dist_dict.
+    :param self: Player object
+    :param dist_dict: Dictionary storing the distances of all hexes from pos
+    :param pos: The goal hex that we are finding the distances to
+    :param pos: Starting distance = 0
+    :return dist_dict: dictionary of calculated distances
+    """
     dist += 1
     # These '###' represents an unvisited hex
     if dist_dict[pos] == '###':
@@ -48,6 +59,7 @@ def distance_fill(self, dist_dict, pos, dist):
             distance_fill(self, dist_dict, next_jump, dist)
     return dist_dict
 
+
 def check_trouble(self):
     """
     Checks if any of the pieces are next to an enemy
@@ -60,6 +72,7 @@ def check_trouble(self):
             if enemy in self.adj_dict[piece]:
                 in_dangered.append(piece)
     return in_dangered
+
 
 def defensive_moves(self, in_dangered):
     """
@@ -102,6 +115,7 @@ def defensive_moves(self, in_dangered):
         method += 1
     return action
 
+
 def try_attack(self, piece):
     """
     Function to check if the piece that is under attack could attack back
@@ -123,6 +137,7 @@ def try_attack(self, piece):
                 return movement
     return False
 
+
 def try_protect(self, piece):
     """
     Function to a another piece behind the current piece that is in danger
@@ -139,7 +154,7 @@ def try_protect(self, piece):
                 r_diff = piece[1] - enemy[1]
                 protection = (piece[0] + q_diff, piece[1] + r_diff)
                 if (protection in self.board_dict
-                    and protection in self.adj_dict[piece]):
+                        and protection in self.adj_dict[piece]):
                     continue
                 for other in self.pieces:
                     if other == protection or other == piece:
@@ -150,6 +165,7 @@ def try_protect(self, piece):
                         movement.append("move")
                         return movement
     return movement
+
 
 def move_away(self, piece):
     """
@@ -162,8 +178,8 @@ def move_away(self, piece):
     for next_move in self.adj_dict[piece]:
         # Tries moving back
         if (next_move in self.board_dict
-            or bool(set(self.adj_dict[next_move]) & set(self.enemies))):
-                continue
+                or bool(set(self.adj_dict[next_move]) & set(self.enemies))):
+            continue
         else:
             movement.append(piece)
             movement.append(next_move)
@@ -182,6 +198,7 @@ def move_away(self, piece):
                     movement.append("jump")
                     return movement
     return movement
+
 
 def attack_move(self, piece):
     """
@@ -203,6 +220,7 @@ def attack_move(self, piece):
                 movement.append("jump")
                 return movement
     return False
+
 
 def get_moves(self, dist_dict):
     """
@@ -231,7 +249,7 @@ def get_moves(self, dist_dict):
                         continue
                     if next_move in self.corners[1]:
                         if (enemy not in self.corners[0]
-                            and enemy not in self.corners[1]):
+                                and enemy not in self.corners[1]):
                             continue
                     # get the q,r behind the next_move parallel to the enemy
                     # check if the move there is safe
@@ -260,6 +278,7 @@ def get_moves(self, dist_dict):
         best_moves[piece] = movement
 
     return best_moves
+
 
 def get_jumps(self, dist_dict):
     """
@@ -307,7 +326,8 @@ def get_jumps(self, dist_dict):
                         # check if the move there is safe
                         q_diff = enemy[0] - next_jump[0]
                         r_diff = enemy[1] - next_jump[1]
-                        protection = (next_jump[0] - q_diff, next_jump[1] - r_diff)
+                        protection = (
+                            next_jump[0] - q_diff, next_jump[1] - r_diff)
                         if protection == piece or protection not in self.pieces:
                             safety = False
             if not safety:
@@ -333,7 +353,7 @@ def get_jumps(self, dist_dict):
         # (Worsen the piece condition) remove the best jump instead
         # and its not a kill move
         if (best_jump != () and dist_dict[piece] <= dist_dict[best_jump]
-            and not final_kill):
+                and not final_kill):
             best_jump = ()
 
         # Each value of the position contains the current position
@@ -344,6 +364,7 @@ def get_jumps(self, dist_dict):
         best_jumps[piece] = jumping
 
     return best_jumps
+
 
 def final_movements(dist_dict, best_moves, best_jumps):
     """
@@ -383,9 +404,10 @@ def final_movements(dist_dict, best_moves, best_jumps):
 
     return final_moves
 
+
 def get_piece(dist_dict, final_moves, position):
     """
-    This function choose the best piece to move amongst the piece on the board
+    This function chooses the best piece to move amongst all the pieces on the board
     :param dist_dict: Dictionary containing the distance to the nearest goal
     :param final_moves: Dictionary containing the best action for each piece
     :param position: From which end should we move the pieces
@@ -424,4 +446,3 @@ def get_piece(dist_dict, final_moves, position):
                 final_move = final_moves[piece]
 
     return final_move
-

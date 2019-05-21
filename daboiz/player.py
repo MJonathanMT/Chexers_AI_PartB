@@ -2,16 +2,12 @@ import daboiz.movement_helper as action
 import daboiz.update_helper as update
 import daboiz.init_helper as init
 
+
 class Player:
     def __init__(self, colour):
         """
-        This method is called once at the beginning of the game to initialise
-        your player. You should use this opportunity to set up your own internal
-        representation of the game state, and any other information about the
-        game state you would like to maintain for the duration of the game.
-        The parameter colour will be a string representing the player your
-        program will play as (Red, Green or Blue). The value will be one of the
-        strings "red", "green", or "blue" correspondingly.
+        Function used to initialize our Player class. Also used to keep track of
+        all necessary and relevant information on the game.
         """
         # TODO: Set up state representation.
 
@@ -36,13 +32,7 @@ class Player:
 
     def action(self):
         """
-        This method is called at the beginning of each of your turns to request
-        a choice of action from your program.
-        Based on the current state of the game, your player should select and
-        return an allowed action to play on this turn. If there are no allowed
-        actions, your player must return a pass instead. The action (or pass)
-        must be represented based on the above instructions for representing
-        actions.
+        Returns the action of our program's choice
         """
 
         # Fill distance dictionary with the least distance from each goal
@@ -86,7 +76,7 @@ class Player:
                 final_action = ("EXIT", piece)
                 return final_action
 
-        if final_move[0] == "PASS" :
+        if final_move[0] == "PASS":
             # Get the best move possible for each piece
             best_moves = action.get_moves(self, dist_dict)
 
@@ -94,7 +84,8 @@ class Player:
             best_jumps = action.get_jumps(self, dist_dict)
 
             # Get the best action possible for each piece
-            final_moves = action.final_movements(dist_dict, best_moves, best_jumps)
+            final_moves = action.final_movements(
+                dist_dict, best_moves, best_jumps)
             if len(self.pieces) > 6:
                 # Choose the best piece to move
                 # Since we have a lot of pieces,
@@ -118,18 +109,8 @@ class Player:
 
     def update(self, colour, action):
         """
-        This method is called at the end of every turn (including your player’s
-        turns) to inform your player about the most recent action. You should
-        use this opportunity to maintain your internal representation of the
-        game state and any other information about the game you are storing.
-        The parameter colour will be a string representing the player whose turn
-        it is (Red, Green or Blue). The value will be one of the strings "red",
-        "green", or "blue" correspondingly.
-        The parameter action is a representation of the most recent action (or
-        pass) conforming to the above in- structions for representing actions.
-        You may assume that action will always correspond to an allowed action
-        (or pass) for the player colour (your method does not need to validate
-        the action/pass against the game rules).
+        Updates our Player and all information being kept tracked of 
+        based on every action that is made by all 3 players in the Chexers game
         """
         # TODO: Update state representation in response to action.
 
@@ -257,4 +238,3 @@ def print_board(board_dict, message="Testing Board Condition", debug=False):
     # fill in the template to create the board drawing, then print!
     board = template.format(message, *cells)
     print(board)
-
