@@ -143,3 +143,48 @@ def convert_board(board_dict):
     board = tuple(sorted(board, key=lambda hex: (hex[0].coordinates)))
 
     return board
+
+
+def distance_fill(self, dist_dict, pos, dist):
+    """
+    Function to calculate distances from each hex to the closest goal
+    :return: A dictionary of all hexes and their respective distances
+    """
+    dist += 1
+    # These '###' represents an unvisited hex
+    if dist_dict[pos] == '###':
+        dist_dict[pos] = dist
+    # If distance is bigger than the distance in the dictionary,
+    # exit from the recursion
+    elif dist > dist_dict[pos]:
+        return 0
+    # If distance is less, change the value in the dictionary
+    elif dist < dist_dict[pos]:
+        dist_dict[pos] = dist
+
+    next_jump = ()
+    for next_pos in self.adj_dict[pos]:
+        movable = True
+        jumpable = True
+
+        # Set movable to False if it is blocked
+        if next_pos in self.board_dict:
+            movable = False
+
+        # Check if can jump over the blocked piece, only happens when
+        # the next piece is a blocked piece
+        if not movable:
+            q_move = (next_pos[0] - pos[0])*2
+            r_move = (next_pos[1] - pos[1])*2
+            next_jump = (pos[0] + q_move, pos[1] + r_move)
+            if (next_jump not in self.adj_dict[next_pos] or
+                    next_jump in self.board_dict):
+                jumpable = False
+
+        # Recurse through the appropriate movement: move or jump
+        if movable:
+            distance_fill(self, dist_dict, next_pos, dist)
+        elif jumpable:
+            distance_fill(self, dist_dict, next_jump, dist)
+
+    return dist_dict

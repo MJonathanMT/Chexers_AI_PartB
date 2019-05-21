@@ -61,6 +61,13 @@ class Player:
         must be represented based on the above instructions for representing
         actions.
         """
+        if not self.pieces:
+            return ("PASS", None)
+
+        # Update our own dist_dict every time it's our turn
+        for goal in self.goals:
+            self.dist_dict = action.distance_fill(
+                self, self.dist_dict, goal, 0)
 
         # Fill distance dictionary with the least distance from each goal
         dist_dict = action.create_dist_dict()

@@ -6,6 +6,7 @@ from daboiz.winstate import WinState
 
 # Python imports
 import copy
+import random
 
 
 class GameState:
@@ -13,7 +14,7 @@ class GameState:
     Board class
     """
 
-    def __init__(self, start, player, pieces_exited):
+    def __init__(self, start, player, pieces_exited, dist_dict, pieces, adj_dict):
         # ((Hex, "type"), (Hex, "type"),...)
         self.board = start
         # "red"/"green"/"blue"
@@ -21,9 +22,11 @@ class GameState:
         # (1, 2, 3) in order (r, g, b)
         self.pieces_exited = pieces_exited
 
-    def current_player(self):
-        # Returns the current player colour
-        return self.turn
+        # Used for eval function/heuristics
+        # Dictionary to store all the distances of each colour piece to their closest goals
+        self.dist_dict = dist_dict
+        self.pieces = pieces
+        self.adj_dict = adj_dict
 
     def next_state(self, action):
         # Takes the game state, and the action to be applied.
@@ -218,7 +221,68 @@ class GameState:
         for colour_exited in self.pieces_exited:
             if colour_exited >= 4:
                 if self.pieces_exited.index(colour_exited) == player_index:
-                    return 1
+                    return 5
                 else:
-                    return 0
+                    return -3
         return 0
+
+    def best_action(self, legal_actions):
+        # Function to CHOOSE which action is the best from a list of ALL legal actions
+
+        # Prioritise the legal moves
+        all_exits = []
+        for action in legal_actions:
+            if (action[0] == "EXIT"):
+                all_exits.append(action)
+        if all_exits:
+            best_action = random.choice(all_exits)
+
+        # Create a dictionary for searching purposes
+        board_dict = {}
+        for hex in self.board:
+            board_dict[hex[0].coordinates] = hex[1]
+
+        # Get the best move possible for each piece
+        best_moves = helper.get_moves(self, self.dist_dict)
+
+        # Get the best jump possible for each piece
+        best_jumps = helper.get_jumps(self, self.dist_dict)
+
+        # Get the best action possible for each piece
+        final_moves = helper.final_movements(
+            self.dist_dict, best_moves, best_jumps)
+
+        # Choose the best piece to move
+        final_move = helper.get_piece(self.dist_dict, final_moves)
+        if final_move == ():
+            return action
+        elif final_move[2] == 'move':
+            action = ("MOVE", (str(final_move[0]), str(final_move[1])))
+        elif final_move[2] == 'jump':
+            action = ("JUMP", (str(final_move[0]), str(final_move[1])))
+        return action
+
+        # # Categorize all the legal moves into exits, jumps and moves
+        # all_exits = []
+        # all_jumps = []
+        # all_moves = []
+        # for action in legal_actions:
+        #     if (action[0] == "EXIT"):
+        #         all_exits.append(action)
+        #     elif (action[0] == "JUMP"):
+        #         all_jumps.append(action)
+        #     if (action[0] == "MOVE"):
+        #         all_moves.append(action)
+
+        # # Prioritise the legal moves
+        # # 1 - EXITS, 2 - JUMPS, 3 - MOVES
+        # if all_exits:
+        #     best_action = random.choice(all_exits)
+        # elif all_jumps:
+        #     best_action = random.choice(all_jumps)
+        # elif all_moves:
+        #     best_action = random.choice(all_moves)
+        # else:
+        #     best_action = ("PASS", None)
+
+        # return best_action

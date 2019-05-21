@@ -1,3 +1,6 @@
+# Local imports
+from daboiz import helper
+
 import math
 import random
 import time
@@ -6,7 +9,8 @@ import time
 def random_policy(state):
     while not state.is_terminal():
         try:
-            action = random.choice(state.legal_actions())
+            # action = random.choice(state.legal_actions())
+            action = best_action(state.legal_actions())
         except IndexError:
             raise Exception(
                 "Non-terminal state has no possible actions: " + str(state))
@@ -59,7 +63,6 @@ class mcts():
         self.root = ()
 
     # main search function
-
     def search(self, initial_state):
         """
         Main search function for the mct
@@ -112,7 +115,6 @@ class mcts():
         best_value = float("-inf")
         best_nodes = []
 
-        #
         for child in node.children.values():
             node_value = child.total_reward / child.num_visits + exploration_value * math.sqrt(
                 2 * math.log(node.num_visits) / child.num_visits)
@@ -121,6 +123,7 @@ class mcts():
                 best_nodes = [child]
             elif node_value == best_value:
                 best_nodes.append(child)
+
         return random.choice(best_nodes)
 
     @staticmethod
@@ -134,7 +137,7 @@ class mcts():
         for action in actions:
             if action not in node.children.keys():
                 # use zach's take action
-                new_node = treeNode(node.state.next_state(action), node)
+                new_node = treeNode(node.state.next_state(action), node, )
                 node.children[action] = new_node
                 if len(actions) == len(node.children):
                     node.is_fully_expanded = True
