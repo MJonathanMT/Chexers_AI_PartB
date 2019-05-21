@@ -225,6 +225,7 @@ def get_moves(self, dist_dict):
         movement = []
         shortest_dist = 0
         best_move = ()
+        not_safe_move = ()
         for next_move in self.adj_dict[piece]:
             safety = True
             # Skips move if there is another piece in front of it or
@@ -235,6 +236,12 @@ def get_moves(self, dist_dict):
             # check if enemy is adjacent to the next move
             for enemy in self.enemies:
                 if enemy in self.adj_dict[next_move]:
+                    if next_move in self.corners[0]:
+                        continue
+                    if next_move in self.corners[1]:
+                        if (enemy not in self.corners[0]
+                            and enemy not in self.corners[1]):
+                            continue
                     # get the x,y behind the next_move parallel to the enemy
                     # check if the move there is safe
                     x_diff = enemy[0] - next_move[0]
@@ -294,6 +301,12 @@ def get_jumps(self, dist_dict):
                 # check if enemy is adjacent to the next move
                 for enemy in self.enemies:
                     if enemy in self.adj_dict[next_jump]:
+                        if next_move in self.corners[0]:
+                            continue
+                        if next_move in self.corners[1]:
+                            if (enemy not in self.corners[0]
+                                    and enemy not in self.corners[1]):
+                                continue
                         # get the x,y behind the next_move parallel to the enemy
                         # check if the move there is safe
                         x_diff = enemy[0] - next_jump[0]

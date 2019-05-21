@@ -29,6 +29,7 @@ class Player:
         self.adj_dict = init.get_adjacent((0, 0), empty_dict)
 
         self.enemies = init.get_enemies(self)
+        self.corners = init.get_corners()
 
     def action(self):
         """
@@ -95,7 +96,7 @@ class Player:
             # Get the best action possible for each piece
             final_moves = action.final_movements(dist_dict, best_moves, best_jumps)
             print("ALL FINAL MOVES = "+str(final_moves))
-            if len(self.pieces) > 5:
+            if len(self.pieces) > 6:
                 # Choose the best piece to move
                 final_move = action.get_piece(dist_dict, final_moves, "front")
             else:
