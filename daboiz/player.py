@@ -110,6 +110,9 @@ class Player:
         the action/pass against the game rules).
         """
 
+        if colour == self.colour:
+            self.recent_updates = ()
+
         if action[0] == "MOVE":
             del self.board_dict[action[1][0]]
             self.board_dict[action[1][1]] = colour
